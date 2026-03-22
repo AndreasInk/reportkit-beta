@@ -70,6 +70,8 @@ The CLI no longer includes cron management. Scheduling is expected to be handled
 - signed out: email/password login
 - signed in: token sync status, rescan disabled, sign out
 
+On first launch, the sign-out flow now shows a short onboarding message and a single auth screen with **Sign In** and **Sign Up** mode toggle. Sign up is handled directly with email and password via Supabase. If email confirmation is required, the app shows a confirmation instruction and keeps you in the signed-out flow until you sign in.
+
 ## Notes
 
 - The widget uses a new `ReportKitSimpleAttributes` contract and intentionally drops the v1 payload model.

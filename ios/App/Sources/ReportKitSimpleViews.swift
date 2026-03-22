@@ -11,7 +11,7 @@ struct ReportKitSimpleRootView: View {
                     ProgressView("Loading ReportKitSimple")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 case .signedOut:
-                    SignInScreen()
+                    AuthScreen()
                 case .signedIn(let session):
                     SignedInScreen(session: session)
                 }
@@ -28,12 +28,26 @@ struct ReportKitSimpleRootView: View {
     }
 }
 
-private struct SignInScreen: View {
+private struct AuthScreen: View {
     @EnvironmentObject private var model: ReportKitSimpleAppModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Sign in with your ReportKit account to upload activity tokens.")
+            if !model.hasSeenOnboarding {
+                Text("ReportKitSimple helps you sync ReportKit activity tokens from your phone so your Live Activity updates stay aligned with the latest report state.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("onboarding-title")
+            }
+
+            Picker("Auth Mode", selection: $model.authMode) {
+                Text("Sign In").tag(AuthMode.signIn)
+                Text("Sign Up").tag(AuthMode.signUp)
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("auth-mode-toggle")
+
+            Text(model.authMode == .signIn ? "Sign in with your ReportKit account to upload activity tokens." : "Create your ReportKit account with email and password.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -45,24 +59,32 @@ private struct SignInScreen: View {
                     .padding(14)
                     .background(.background)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .accessibilityIdentifier("auth-email-field")
 
                 SecureField("Password", text: $model.password)
                     .textContentType(.password)
                     .padding(14)
                     .background(.background)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .accessibilityIdentifier("auth-password-field")
             }
 
             Button {
-                Task { await model.signIn() }
+                Task {
+                    if model.authMode == .signIn {
+                        await model.signIn()
+                    } else {
+                        await model.signUp()
+                    }
+                }
             } label: {
-                Text(model.isWorking ? "Signing In…" : "Sign In")
+                Text(model.isWorking ? (model.authMode == .signIn ? "Signing In…" : "Creating account…") : (model.authMode == .signIn ? "Sign In" : "Sign Up"))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
             .disabled(model.isWorking)
-            .accessibilityIdentifier("sign-in-button")
+            .accessibilityIdentifier(model.authMode == .signIn ? "sign-in-button" : "sign-up-button")
 
             StatusMessageView()
             Spacer()

@@ -38,6 +38,8 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         PRODUCT_NAME: ReportKitSimple
         INFOPLIST_FILE: App/Resources/Info.plist
+        REPORTKIT_SUPABASE_ANON_KEY: "$(REPORTKIT_SUPABASE_ANON_KEY)"
+        REPORTKIT_SUPABASE_URL: "$(REPORTKIT_SUPABASE_URL)"
     dependencies:
       - package: Supabase
       - target: ReportKitSimpleWidgetExtension

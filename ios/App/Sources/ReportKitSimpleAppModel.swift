@@ -2,22 +2,61 @@ import Foundation
 import ActivityKit
 import SwiftUI
 
+protocol ReportKitSimpleAuthenticating: Sendable {
+    func currentSession() async -> UserSessionSnapshot?
+    func signIn(email: String, password: String) async throws -> UserSessionSnapshot
+    func signUp(email: String, password: String) async throws -> UserSessionSnapshot?
+    func signOut() async
+}
+
+private enum ReportKitSimpleDefaults {
+    static let seenOnboardingKey = "ReportKitSimpleHasSeenOnboarding"
+}
+
+private enum ReportKitSimpleLaunchFlags {
+    static let resetOnboarding = "-ReportKitSimpleResetOnboarding"
+}
+
 @MainActor
 final class ReportKitSimpleAppModel: ObservableObject {
     @Published var phase: ReportKitSimplePhase = .launching
     @Published var email = ""
     @Published var password = ""
+    @Published var authMode: AuthMode = .signIn
     @Published var tokenStatus: TokenStatusSnapshot = .empty
     @Published var isWorking = false
     @Published var infoMessage: String?
     @Published var errorMessage: String?
     @Published private(set) var isPreviewMode = false
+    @Published var hasSeenOnboarding: Bool
+
+    private let userDefaults: UserDefaults
+    private let authProvider: any ReportKitSimpleAuthenticating
+
+    init(authProvider: any ReportKitSimpleAuthenticating = ReportKitSimpleSupabaseAuth.shared,
+         userDefaults: UserDefaults = .standard
+    ) {
+        self.authProvider = authProvider
+        self.userDefaults = userDefaults
+        let shouldReset = ProcessInfo.processInfo.arguments.contains(ReportKitSimpleLaunchFlags.resetOnboarding)
+        if shouldReset {
+            userDefaults.removeObject(forKey: ReportKitSimpleDefaults.seenOnboardingKey)
+        }
+        self.hasSeenOnboarding = userDefaults.bool(forKey: ReportKitSimpleDefaults.seenOnboardingKey)
+    }
+
+    func markOnboardingSeen() {
+        guard !hasSeenOnboarding else { return }
+        hasSeenOnboarding = true
+        userDefaults.setValue(true, forKey: ReportKitSimpleDefaults.seenOnboardingKey)
+    }
 
     func refresh() async {
         if let previewPhase = previewPhaseOverride() {
             isPreviewMode = true
             phase = previewPhase
             tokenStatus = previewTokenStatus()
+            hasSeenOnboarding = true
             return
         }
 
@@ -29,7 +68,7 @@ final class ReportKitSimpleAppModel: ObservableObject {
             }
         }
 
-        if let session = await ReportKitSimpleSupabaseAuth.shared.currentSession() {
+        if let session = await authProvider.currentSession() {
             phase = .signedIn(session)
             await ReportKitSimplePushTokenRegistrar.shared.prepareForAuthenticatedUse()
         } else {
@@ -53,9 +92,40 @@ final class ReportKitSimpleAppModel: ObservableObject {
         defer { isWorking = false }
 
         do {
-            _ = try await ReportKitSimpleSupabaseAuth.shared.signIn(email: email, password: password)
+            markOnboardingSeen()
+            _ = try await authProvider.signIn(email: email, password: password)
             infoMessage = "Signed in."
             await refresh()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func signUp() async {
+        guard !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "Email is required."
+            return
+        }
+        guard !password.isEmpty else {
+            errorMessage = "Password is required."
+            return
+        }
+
+        isWorking = true
+        infoMessage = nil
+        errorMessage = nil
+        defer { isWorking = false }
+
+        do {
+            markOnboardingSeen()
+            let session = try await authProvider.signUp(email: email, password: password)
+            if let session {
+                infoMessage = "Account created and signed in as \(session.email)."
+                phase = .signedIn(session)
+                await ReportKitSimplePushTokenRegistrar.shared.prepareForAuthenticatedUse()
+            } else {
+                infoMessage = "Account created. Please check your email to confirm before signing in."
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -65,7 +135,7 @@ final class ReportKitSimpleAppModel: ObservableObject {
         isWorking = true
         defer { isWorking = false }
 
-        await ReportKitSimpleSupabaseAuth.shared.signOut()
+        await authProvider.signOut()
         infoMessage = "Signed out."
         await refresh()
     }

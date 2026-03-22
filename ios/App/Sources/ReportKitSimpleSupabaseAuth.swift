@@ -1,7 +1,7 @@
 import Foundation
 import Supabase
 
-actor ReportKitSimpleSupabaseAuth {
+actor ReportKitSimpleSupabaseAuth: ReportKitSimpleAuthenticating {
     static let shared = ReportKitSimpleSupabaseAuth()
 
     private var cachedClient: SupabaseClient?
@@ -24,6 +24,20 @@ actor ReportKitSimpleSupabaseAuth {
             userID: session.user.id.uuidString,
             email: session.user.email ?? email
         )
+    }
+
+    func signUp(email: String, password: String) async throws -> UserSessionSnapshot? {
+        let client = try client()
+        let response = try await client.auth.signUp(email: email, password: password)
+
+        if let session = response.session {
+            return UserSessionSnapshot(
+                userID: session.user.id.uuidString,
+                email: session.user.email ?? email
+            )
+        }
+
+        return nil
     }
 
     func signOut() async {

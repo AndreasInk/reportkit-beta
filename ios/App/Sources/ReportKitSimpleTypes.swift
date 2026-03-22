@@ -1,5 +1,10 @@
 import Foundation
 
+enum AuthMode {
+    case signIn
+    case signUp
+}
+
 struct UserSessionSnapshot: Equatable {
     let userID: String
     let email: String
