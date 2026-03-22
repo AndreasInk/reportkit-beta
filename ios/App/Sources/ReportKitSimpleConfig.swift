@@ -1,21 +1,27 @@
 import Foundation
 
 enum ReportKitSimpleConfig {
-    static var supabaseURL: URL {
+    private static func requiredInfoValue(_ key: String) -> String {
         guard
-            let raw = Bundle.main.object(forInfoDictionaryKey: "REPORTKIT_SUPABASE_URL") as? String,
-            let url = URL(string: raw.trimmingCharacters(in: .whitespacesAndNewlines))
+            let raw = Bundle.main.object(forInfoDictionaryKey: key) as? String,
+            !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+            !raw.contains("$(")
         else {
-            preconditionFailure("Missing REPORTKIT_SUPABASE_URL")
+            preconditionFailure("Missing or unresolved config key: \(key)")
+        }
+
+        return raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static var supabaseURL: URL {
+        guard let url = URL(string: requiredInfoValue("REPORTKIT_SUPABASE_URL")) else {
+            preconditionFailure("Invalid URL for REPORTKIT_SUPABASE_URL")
         }
         return url
     }
 
     static var supabaseAnonKey: String {
-        guard let key = Bundle.main.object(forInfoDictionaryKey: "REPORTKIT_SUPABASE_ANON_KEY") as? String else {
-            preconditionFailure("Missing REPORTKIT_SUPABASE_ANON_KEY")
-        }
-        return key
+        return requiredInfoValue("REPORTKIT_SUPABASE_ANON_KEY")
     }
 
     static var apnsEnv: String {

@@ -23,9 +23,9 @@
 	<key>REPORTKIT_APNS_ENV</key>
 	<string>sandbox</string>
 	<key>REPORTKIT_SUPABASE_ANON_KEY</key>
-	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzYWtha2VzdXBmdWR1cGJ4ZmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwODI4NDQsImV4cCI6MjA4NzY1ODg0NH0.oFUeZiR8Nz01pdY0FCh6OP38LveHKYlmL46jMxnUhBo</string>
+	<string>$(REPORTKIT_SUPABASE_ANON_KEY)</string>
 	<key>REPORTKIT_SUPABASE_URL</key>
-	<string>https://bsakakesupfudupbxflj.supabase.co</string>
+	<string>$(REPORTKIT_SUPABASE_URL)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
