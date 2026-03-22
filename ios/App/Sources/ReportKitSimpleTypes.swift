@@ -5,6 +5,16 @@ enum AuthMode {
     case signUp
 }
 
+enum OnboardingEntryMode {
+    case firstRun
+    case revisit
+}
+
+enum SignedOutScreen: Equatable {
+    case onboarding
+    case auth
+}
+
 struct UserSessionSnapshot: Equatable {
     let userID: String
     let email: String
@@ -12,7 +22,7 @@ struct UserSessionSnapshot: Equatable {
 
 enum ReportKitSimplePhase: Equatable {
     case launching
-    case signedOut
+    case signedOut(SignedOutScreen)
     case signedIn(UserSessionSnapshot)
 }
 

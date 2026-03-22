@@ -35,6 +35,10 @@ actor TestAuthProvider: ReportKitSimpleAuthenticating {
     func signOut() async {
         signOutCalled = true
     }
+
+    func setSignUpResult(_ result: Result<UserSessionSnapshot?, Error>) {
+        signUpResult = result
+    }
 }
 
 @MainActor
@@ -49,22 +53,82 @@ struct ReportKitSimpleTests {
         #expect(session.userID == "demo-user")
     }
 
-    @Test("Auth screen starts in sign in mode with onboarding unseen")
-    func authModeAndOnboardingDefaultState() {
-        let defaults = UserDefaults(suiteName: "com.reportkit.tests.onboarding-defaults")!
-        defaults.removePersistentDomain(forName: "com.reportkit.tests.onboarding-defaults")
+    @Test("First launch enters onboarding step 1 when unseen")
+    func firstLaunchEntersOnboarding() async {
+        let suite = "com.reportkit.tests.onboarding-first-launch"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
 
         let model = ReportKitSimpleAppModel(authProvider: TestAuthProvider(), userDefaults: defaults)
+        await model.refresh()
 
-        #expect(model.authMode == .signIn)
-        #expect(!model.hasSeenOnboarding)
-        model.markOnboardingSeen()
+        #expect(model.phase == .signedOut(.onboarding))
+        #expect(model.onboardingStepIndex == 0)
+        #expect(model.onboardingEntryMode == .firstRun)
+
+        defaults.removePersistentDomain(forName: suite)
+    }
+
+    @Test("Skipping onboarding marks seen and routes to sign up auth")
+    func skipOnboardingRoutesToSignUpAuth() async {
+        let suite = "com.reportkit.tests.onboarding-skip"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+
+        let model = ReportKitSimpleAppModel(authProvider: TestAuthProvider(), userDefaults: defaults)
+        await model.refresh()
+        model.skipOnboarding()
+
         #expect(model.hasSeenOnboarding)
+        #expect(model.phase == .signedOut(.auth))
+        #expect(model.authMode == .signUp)
+        #expect(model.onboardingStepIndex == 0)
 
-        let reloadedModel = ReportKitSimpleAppModel(authProvider: TestAuthProvider(), userDefaults: defaults)
-        #expect(reloadedModel.hasSeenOnboarding)
+        defaults.removePersistentDomain(forName: suite)
+    }
 
-        defaults.removePersistentDomain(forName: "com.reportkit.tests.onboarding-defaults")
+    @Test("Completing onboarding marks seen and routes to sign up auth")
+    func completeOnboardingRoutesToSignUpAuth() async {
+        let suite = "com.reportkit.tests.onboarding-complete"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+
+        let model = ReportKitSimpleAppModel(authProvider: TestAuthProvider(), userDefaults: defaults)
+        await model.refresh()
+        model.nextStep()
+        model.nextStep()
+        model.nextStep()
+
+        #expect(model.hasSeenOnboarding)
+        #expect(model.phase == .signedOut(.auth))
+        #expect(model.authMode == .signUp)
+        #expect(model.onboardingStepIndex == 0)
+
+        defaults.removePersistentDomain(forName: suite)
+    }
+
+    @Test("Restart onboarding from auth preserves credentials")
+    func restartOnboardingPreservesCredentials() {
+        let suite = "com.reportkit.tests.onboarding-restart"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.setValue(true, forKey: "ReportKitSimpleHasSeenOnboarding")
+
+        let model = ReportKitSimpleAppModel(authProvider: TestAuthProvider(), userDefaults: defaults)
+        model.phase = .signedOut(.auth)
+        model.email = "person@example.com"
+        model.password = "very-secret-password"
+        model.authMode = .signIn
+
+        model.restartOnboarding()
+
+        #expect(model.phase == .signedOut(.onboarding))
+        #expect(model.onboardingEntryMode == .revisit)
+        #expect(model.onboardingStepIndex == 0)
+        #expect(model.email == "person@example.com")
+        #expect(model.password == "very-secret-password")
+        #expect(model.authMode == .signIn)
+
+        defaults.removePersistentDomain(forName: suite)
     }
 
     @Test("Sign in requires credentials before calling auth provider")
@@ -86,7 +150,7 @@ struct ReportKitSimpleTests {
     @Test("Sign up can be started and supports email-confirmation flow")
     func signUpConfirmationMessage() async {
         let provider = TestAuthProvider()
-        provider.signUpResult = .success(nil)
+        await provider.setSignUpResult(.success(nil))
         let defaults = UserDefaults(suiteName: "com.reportkit.tests.signup")!
         defaults.removePersistentDomain(forName: "com.reportkit.tests.signup")
         let model = ReportKitSimpleAppModel(authProvider: provider, userDefaults: defaults)

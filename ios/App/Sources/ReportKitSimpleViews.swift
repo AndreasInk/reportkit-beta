@@ -10,8 +10,13 @@ struct ReportKitSimpleRootView: View {
                 case .launching:
                     ProgressView("Loading ReportKitSimple")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                case .signedOut:
-                    AuthScreen()
+                case .signedOut(let signedOutScreen):
+                    switch signedOutScreen {
+                    case .onboarding:
+                        OnboardingPagerView()
+                    case .auth:
+                        AuthScreen()
+                    }
                 case .signedIn(let session):
                     SignedInScreen(session: session)
                 }
@@ -28,16 +33,97 @@ struct ReportKitSimpleRootView: View {
     }
 }
 
+private struct OnboardingPage {
+    let title: String
+    let message: String
+}
+
+private struct OnboardingPagerView: View {
+    @EnvironmentObject private var model: ReportKitSimpleAppModel
+
+    private let pages = [
+        OnboardingPage(
+            title: "Noise steals attention.",
+            message: "Important app signals get buried across chats, dashboards, and alerts. ReportKitSimple reduces that noise."
+        ),
+        OnboardingPage(
+            title: "One lock-screen truth.",
+            message: "Keep your Live Activity aligned with the latest report state so you can glance, assess, and act quickly."
+        ),
+        OnboardingPage(
+            title: "Set up in minutes.",
+            message: "Create your account, sign in on your CLI and phone with the same credentials, and your token sync starts."
+        )
+    ]
+
+    var body: some View {
+        let page = pages[model.onboardingStepIndex]
+
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                Text("Step \(model.onboardingStepIndex + 1) of \(pages.count)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("onboarding-step-indicator")
+                Spacer()
+                Button("Skip") {
+                    model.skipOnboarding()
+                }
+                .accessibilityIdentifier("onboarding-skip-button")
+            }
+
+            Text(page.title)
+                .font(.title2.weight(.semibold))
+                .accessibilityIdentifier("onboarding-step-title")
+
+            Text(page.message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(height: 140, alignment: .top)
+                .minimumScaleFactor(0.5)
+                .accessibilityIdentifier("onboarding-step-message")
+
+            HStack(spacing: 8) {
+                ForEach(0..<pages.count, id: \.self) { index in
+                    Capsule()
+                        .fill(index == model.onboardingStepIndex ? Color.accentColor : Color.secondary.opacity(0.3))
+                        .frame(width: index == model.onboardingStepIndex ? 20 : 8, height: 8)
+                        .animation(.easeInOut(duration: 0.2), value: model.onboardingStepIndex)
+                }
+            }
+            .accessibilityIdentifier("onboarding-page-dots")
+
+            Spacer()
+
+        
+                Button {
+                    model.nextStep()
+                } label: {
+                    Text(model.onboardingStepIndex == pages.count - 1 ? "Get Started" : "Continue")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                }
+               
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("onboarding-next-button")
+        }
+    }
+}
+
 private struct AuthScreen: View {
     @EnvironmentObject private var model: ReportKitSimpleAppModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            if !model.hasSeenOnboarding {
-                Text("ReportKitSimple helps you sync ReportKit activity tokens from your phone so your Live Activity updates stay aligned with the latest report state.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("onboarding-title")
+            HStack {
+                Text("Account")
+                    .font(.headline)
+                Spacer()
+                Button("View intro again") {
+                    model.restartOnboarding()
+                }
+                .font(.subheadline)
+                .accessibilityIdentifier("view-intro-again-button")
             }
 
             Picker("Auth Mode", selection: $model.authMode) {
@@ -188,10 +274,21 @@ private struct StatusMessageView: View {
 private struct RootPreviewContainer: View {
     let model: ReportKitSimpleAppModel
 
-    init(phase: ReportKitSimplePhase, tokenStatus: TokenStatusSnapshot) {
+    init(
+        phase: ReportKitSimplePhase,
+        tokenStatus: TokenStatusSnapshot,
+        onboardingStepIndex: Int = 0,
+        authMode: AuthMode = .signIn,
+        hasSeenOnboarding: Bool = true
+    ) {
         let model = ReportKitSimpleAppModel()
         model.phase = phase
         model.tokenStatus = tokenStatus
+        model.configurePreviewSignedOutState(
+            onboardingStepIndex: onboardingStepIndex,
+            authMode: authMode,
+            hasSeenOnboarding: hasSeenOnboarding
+        )
         self.model = model
     }
 
@@ -201,8 +298,20 @@ private struct RootPreviewContainer: View {
     }
 }
 
-#Preview("Signed Out") {
-    RootPreviewContainer(phase: .signedOut, tokenStatus: .empty)
+#Preview("Onboarding Step 1") {
+    RootPreviewContainer(phase: .signedOut(.onboarding), tokenStatus: .empty, onboardingStepIndex: 0, hasSeenOnboarding: false)
+}
+
+#Preview("Onboarding Step 2") {
+    RootPreviewContainer(phase: .signedOut(.onboarding), tokenStatus: .empty, onboardingStepIndex: 1, hasSeenOnboarding: false)
+}
+
+#Preview("Onboarding Step 3") {
+    RootPreviewContainer(phase: .signedOut(.onboarding), tokenStatus: .empty, onboardingStepIndex: 2, hasSeenOnboarding: false)
+}
+
+#Preview("Signed Out Auth") {
+    RootPreviewContainer(phase: .signedOut(.auth), tokenStatus: .empty, authMode: .signUp)
 }
 
 #Preview("Signed In") {

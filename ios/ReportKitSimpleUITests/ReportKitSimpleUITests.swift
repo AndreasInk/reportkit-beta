@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class ReportKitSimpleUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -8,41 +9,60 @@ final class ReportKitSimpleUITests: XCTestCase {
     private func appForFreshOnboarding() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments.append("-ReportKitSimpleResetOnboarding")
+        app.launchEnvironment["REPORTKIT_SUPABASE_URL"] = "https://example.supabase.co"
+        app.launchEnvironment["REPORTKIT_SUPABASE_ANON_KEY"] = "test-anon-key"
         return app
     }
 
-    func testOnboardingTextVisibleOnFirstLaunch() throws {
+    func testFirstLaunchShowsOnboardingPagerControls() throws {
         let app = appForFreshOnboarding()
         app.launch()
 
-        let onboardingTitle = app.staticTexts["onboarding-title"]
-        XCTAssertTrue(onboardingTitle.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["onboarding-step-title"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["onboarding-step-indicator"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["onboarding-skip-button"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["onboarding-next-button"].waitForExistence(timeout: 2))
     }
 
-    func testAuthModeCanSwitchToSignUp() throws {
+    func testContinueThroughOnboardingLandsInSignUp() throws {
         let app = appForFreshOnboarding()
         app.launch()
 
-        let signUpSegment = app.segmentedControls["auth-mode-toggle"].buttons["Sign Up"]
-        XCTAssertTrue(signUpSegment.waitForExistence(timeout: 5))
-        signUpSegment.tap()
+        let continueButton = app.buttons["onboarding-next-button"]
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 5))
+
+        continueButton.tap()
+        continueButton.tap()
+        continueButton.tap()
 
         XCTAssertTrue(app.buttons["sign-up-button"].waitForExistence(timeout: 2))
     }
 
-    func testSignInButtonIsVisible() throws {
+    func testSkipFromStepOneLandsInSignUp() throws {
         let app = appForFreshOnboarding()
         app.launch()
 
-        let signInButton = app.buttons["sign-in-button"]
-        XCTAssertTrue(signInButton.waitForExistence(timeout: 5))
+        let skipButton = app.buttons["onboarding-skip-button"]
+        XCTAssertTrue(skipButton.waitForExistence(timeout: 5))
+        skipButton.tap()
+
+        XCTAssertTrue(app.buttons["sign-up-button"].waitForExistence(timeout: 2))
     }
 
-    func testAuthFieldsRemainOnSignInMode() throws {
+    func testViewIntroAgainReturnsToOnboarding() throws {
         let app = appForFreshOnboarding()
         app.launch()
 
-        XCTAssertTrue(app.textFields["auth-email-field"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.secureTextFields["auth-password-field"].waitForExistence(timeout: 2))
+        let skipButton = app.buttons["onboarding-skip-button"]
+        XCTAssertTrue(skipButton.waitForExistence(timeout: 5))
+        skipButton.tap()
+        XCTAssertTrue(app.buttons["sign-up-button"].waitForExistence(timeout: 2))
+
+        let introAgainButton = app.buttons["view-intro-again-button"]
+        XCTAssertTrue(introAgainButton.waitForExistence(timeout: 2))
+        introAgainButton.tap()
+
+        XCTAssertTrue(app.staticTexts["onboarding-step-title"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["onboarding-next-button"].waitForExistence(timeout: 2))
     }
 }

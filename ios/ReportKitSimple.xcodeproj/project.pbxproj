@@ -83,6 +83,7 @@
 		D79ED2A8184166DEE1A1BB9C /* ReportKitSimplePushTokenRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimplePushTokenRegistrar.swift; sourceTree = "<group>"; };
 		E18D0A0C2F6F85490036402D /* ReportKitSimple.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ReportKitSimple.entitlements; sourceTree = "<group>"; };
 		E18D0A0D2F6F87710036402D /* ReportKitSimpleWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ReportKitSimpleWidgetExtension.entitlements; sourceTree = "<group>"; };
+		E18D0A662F6FBDBF0036402D /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
 		E43F8A262B8DCCC3328E49B8 /* ReportKitSimpleStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleStorage.swift; sourceTree = "<group>"; };
 		EE852AA447203DCD2A20A2E3 /* ReportKitSimpleAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleAppDelegate.swift; sourceTree = "<group>"; };
 		F4DFE095C264C6F7AB8197C2 /* ReportKitSimpleSupabaseAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleSupabaseAuth.swift; sourceTree = "<group>"; };
@@ -145,6 +146,7 @@
 			isa = PBXGroup;
 			children = (
 				4B59F69CC288F71424CCA3C0 /* Sources */,
+				E18D0A662F6FBDBF0036402D /* Media.xcassets */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -586,7 +588,8 @@
 				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Widget/Resources/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				INFOPLIST_KEY_CFBundleDisplayName = ReportKit;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -609,15 +612,15 @@
 				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Resources/Info.plist;
-				REPORTKIT_SUPABASE_ANON_KEY = "$(REPORTKIT_SUPABASE_ANON_KEY)";
-				REPORTKIT_SUPABASE_URL = "$(REPORTKIT_SUPABASE_URL)";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKit;
 				PRODUCT_NAME = ReportKitSimple;
+				REPORTKIT_SUPABASE_ANON_KEY = "$(REPORTKIT_SUPABASE_ANON_KEY)";
+				REPORTKIT_SUPABASE_URL = "$(REPORTKIT_SUPABASE_URL)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -651,15 +654,15 @@
 				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Resources/Info.plist;
-				REPORTKIT_SUPABASE_ANON_KEY = "$(REPORTKIT_SUPABASE_ANON_KEY)";
-				REPORTKIT_SUPABASE_URL = "$(REPORTKIT_SUPABASE_URL)";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKit;
 				PRODUCT_NAME = ReportKitSimple;
+				REPORTKIT_SUPABASE_ANON_KEY = "$(REPORTKIT_SUPABASE_ANON_KEY)";
+				REPORTKIT_SUPABASE_URL = "$(REPORTKIT_SUPABASE_URL)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -672,7 +675,8 @@
 				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Widget/Resources/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				INFOPLIST_KEY_CFBundleDisplayName = ReportKit;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

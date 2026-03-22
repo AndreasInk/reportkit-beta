@@ -23,6 +23,8 @@ final class ReportKitSimpleAppModel: ObservableObject {
     @Published var email = ""
     @Published var password = ""
     @Published var authMode: AuthMode = .signIn
+    @Published private(set) var onboardingStepIndex = 0
+    @Published private(set) var onboardingEntryMode: OnboardingEntryMode = .firstRun
     @Published var tokenStatus: TokenStatusSnapshot = .empty
     @Published var isWorking = false
     @Published var infoMessage: String?
@@ -51,6 +53,49 @@ final class ReportKitSimpleAppModel: ObservableObject {
         userDefaults.setValue(true, forKey: ReportKitSimpleDefaults.seenOnboardingKey)
     }
 
+    func nextStep() {
+        guard case .signedOut(.onboarding) = phase else { return }
+        if onboardingStepIndex < 2 {
+            onboardingStepIndex += 1
+        } else {
+            completeOnboarding()
+        }
+    }
+
+    func previousStep() {
+        guard case .signedOut(.onboarding) = phase else { return }
+        guard onboardingStepIndex > 0 else { return }
+        onboardingStepIndex -= 1
+    }
+
+    func skipOnboarding() {
+        guard case .signedOut(.onboarding) = phase else { return }
+        completeOnboarding()
+    }
+
+    func completeOnboarding() {
+        markOnboardingSeen()
+        onboardingStepIndex = 0
+        authMode = .signUp
+        phase = .signedOut(.auth)
+    }
+
+    func restartOnboarding() {
+        onboardingEntryMode = .revisit
+        onboardingStepIndex = 0
+        phase = .signedOut(.onboarding)
+    }
+
+    func configurePreviewSignedOutState(
+        onboardingStepIndex: Int,
+        authMode: AuthMode,
+        hasSeenOnboarding: Bool
+    ) {
+        self.onboardingStepIndex = min(max(onboardingStepIndex, 0), 2)
+        self.authMode = authMode
+        self.hasSeenOnboarding = hasSeenOnboarding
+    }
+
     func refresh() async {
         if let previewPhase = previewPhaseOverride() {
             isPreviewMode = true
@@ -72,7 +117,9 @@ final class ReportKitSimpleAppModel: ObservableObject {
             phase = .signedIn(session)
             await ReportKitSimplePushTokenRegistrar.shared.prepareForAuthenticatedUse()
         } else {
-            phase = .signedOut
+            onboardingEntryMode = hasSeenOnboarding ? .revisit : .firstRun
+            onboardingStepIndex = 0
+            phase = .signedOut(hasSeenOnboarding ? .auth : .onboarding)
         }
     }
 
@@ -195,7 +242,9 @@ final class ReportKitSimpleAppModel: ObservableObject {
 
         switch arguments[index + 1] {
         case "signedOut":
-            return .signedOut
+            return .signedOut(.auth)
+        case "onboarding":
+            return .signedOut(.onboarding)
         case "signedIn":
             return .signedIn(UserSessionSnapshot(userID: "preview-user", email: "preview@example.com"))
         default:
