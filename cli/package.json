@@ -1,0 +1,19 @@
+{
+  "name": "@reportkit/simple-cli",
+  "version": "0.1.0",
+  "description": "Minimal ReportKitSimple CLI for login, simple Live Activity sends, and workflow-triggered sending.",
+  "type": "module",
+  "bin": {
+    "reportkit": "dist/src/index.js"
+  },
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/*.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3"
+  }
+}
