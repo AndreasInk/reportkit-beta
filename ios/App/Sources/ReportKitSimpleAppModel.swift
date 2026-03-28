@@ -200,35 +200,26 @@ final class ReportKitSimpleAppModel: ObservableObject {
     }
 
     func startLocalTestActivity(style: ReportKitSimpleVisualStyle = .minimal) async {
+        await startLocalTestActivity(scenario: ReportKitSimpleDemoScenario.defaultScenario(for: style))
+    }
+
+    func startLocalTestActivity(scenario: ReportKitSimpleDemoScenario) async {
         isWorking = true
         errorMessage = nil
         infoMessage = nil
         defer { isWorking = false }
 
         do {
+            let contentState = scenario.contentState()
             let activity = try Activity.request(
-                attributes: ReportKitSimpleAttributes(reportID: "local-test-\(UUID().uuidString)"),
+                attributes: ReportKitSimpleAttributes(reportID: "\(scenario.reportID)-\(UUID().uuidString)"),
                 content: ActivityContent(
-                    state: ReportKitSimpleAttributes.ContentState(
-                        generatedAt: Int64(Date().timeIntervalSince1970),
-                        title: "ReportKitSimple Local Test",
-                        summary: "This live activity was started directly from the app.",
-                        status: .good,
-                        action: "Tap and inspect rendering.",
-                        deepLink: nil,
-                        visualStyle: style,
-                        chartValues: style == .chart
-                        ? [18, 24, 21, 35, 44, 55, 62]
-                        : nil,
-                        chartTitle: style == .chart
-                        ? "Demo Trend"
-                        : nil
-                    ),
+                    state: contentState,
                     staleDate: Date().addingTimeInterval(20 * 60)
                 )
             )
 
-            infoMessage = "Local activity started: \(activity.id)"
+            infoMessage = "Local activity started: \(scenario.title) (\(activity.id))"
         } catch {
             errorMessage = "Unable to start local activity: \(error.localizedDescription)"
         }

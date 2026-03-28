@@ -2,11 +2,26 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
+private enum LiveActivityLayout {
+    static let outerHorizontalPadding: CGFloat = 18
+    static let outerVerticalPadding: CGFloat = 14
+    static let sectionSpacing: CGFloat = 12
+    static let compactSectionSpacing: CGFloat = 10
+    static let chartSpacing: CGFloat = 10
+    static let chartHeight: CGFloat = 40
+    static let chartBarWidth: CGFloat = 10
+    static let chartBarSpacing: CGFloat = 8
+    static let actionHorizontalPadding: CGFloat = 14
+    static let actionVerticalPadding: CGFloat = 10
+    static let actionCornerRadius: CGFloat = 16
+}
+
 struct ReportKitSimpleLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ReportKitSimpleAttributes.self) { context in
             ReportKitSimpleLiveActivityContent(state: context.state)
-                .padding(16)
+                .padding(.horizontal, LiveActivityLayout.outerHorizontalPadding)
+                .padding(.vertical, LiveActivityLayout.outerVerticalPadding)
                 .activityBackgroundTint(.clear)
                 .activitySystemActionForegroundColor(.primary)
                 .widgetURL(URL(string: context.state.deepLink ?? "reportkitsimple://home"))
@@ -57,7 +72,7 @@ private struct MinimalLockScreenContent: View {
     let state: ReportKitSimpleAttributes.ContentState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: LiveActivityLayout.sectionSpacing) {
             HStack {
                 StatusPill(status: state.status)
                 Spacer()
@@ -80,7 +95,7 @@ private struct BannerLockScreenContent: View {
     let state: ReportKitSimpleAttributes.ContentState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: LiveActivityLayout.compactSectionSpacing) {
             HStack {
                 StatusPill(status: state.status)
                 Spacer()
@@ -90,14 +105,17 @@ private struct BannerLockScreenContent: View {
             Text(state.title)
                 .font(.headline)
                 .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .allowsTightening(true)
 
             Text(state.summary)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-                .lineLimit(3)
+                .lineLimit(2)
+                .minimumScaleFactor(0.9)
 
-            if let action = state.action, !action.isEmpty {
+            if let action = state.actionButtonText {
                 ActionPill(text: action)
             }
         }
@@ -133,7 +151,7 @@ private struct ChartLockScreenContent: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: LiveActivityLayout.chartSpacing) {
             HStack {
                 StatusPill(status: state.status)
                 Spacer()
@@ -149,7 +167,8 @@ private struct ChartLockScreenContent: View {
             Text(state.summary)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(3)
         }
     }
 }
@@ -158,17 +177,18 @@ private struct ChartBars: View {
     let values: [Double]
     let style: Status
 
-    private let maxHeight: CGFloat = 45
-
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
+        HStack(alignment: .bottom, spacing: LiveActivityLayout.chartBarSpacing) {
             ForEach(Array(values.enumerated()), id: \.offset) { _, value in
                 Capsule()
                     .fill(style.color.opacity(0.82))
-                    .frame(width: 10, height: maxHeight * CGFloat(value))
+                    .frame(
+                        width: LiveActivityLayout.chartBarWidth,
+                        height: LiveActivityLayout.chartHeight * CGFloat(value)
+                    )
             }
         }
-        .frame(height: maxHeight)
+        .frame(height: LiveActivityLayout.chartHeight)
     }
 }
 
@@ -259,12 +279,21 @@ private struct ActionPill: View {
 
     var body: some View {
         Text(text)
-            .font(.caption)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .font(.caption.weight(.semibold))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .multilineTextAlignment(.leading)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, LiveActivityLayout.actionHorizontalPadding)
+            .padding(.vertical, LiveActivityLayout.actionVerticalPadding)
             .background(Color.accentColor.opacity(0.12))
             .foregroundStyle(.primary)
-            .clipShape(Capsule())
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: LiveActivityLayout.actionCornerRadius,
+                    style: .continuous
+                )
+            )
     }
 }
 
@@ -277,47 +306,23 @@ private struct ActionPill: View {
 #Preview("Minimal", as: .content, using: ReportKitSimpleAttributes(reportID: "preview-minimal")) {
     ReportKitSimpleLiveActivity()
 } contentStates: {
-    ReportKitSimpleAttributes.ContentState(
-        generatedAt: 1_774_000_100,
-        title: "Minimal Report",
-        summary: "Minimal mode keeps the view concise with no chart decoration.",
-        status: .warning,
-        action: "Consider re-running checks before noon.",
-        deepLink: nil,
-        visualStyle: .minimal,
-        chartValues: nil,
-        chartTitle: nil
+    ReportKitSimpleDemoScenario.releaseReadiness.contentState(
+        now: Date(timeIntervalSince1970: 1_774_000_100)
     )
 }
 
 #Preview("Banner", as: .content, using: ReportKitSimpleAttributes(reportID: "preview-banner")) {
     ReportKitSimpleLiveActivity()
 } contentStates: {
-    ReportKitSimpleAttributes.ContentState(
-        generatedAt: 1_774_000_200,
-        title: "Banner Report",
-        summary: "Banner mode includes title and status at a glance.",
-        status: .good,
-        action: "All metrics look normal right now.",
-        deepLink: nil,
-        visualStyle: .banner,
-        chartValues: nil,
-        chartTitle: nil
+    ReportKitSimpleDemoScenario.supabaseErrors.contentState(
+        now: Date(timeIntervalSince1970: 1_774_000_200)
     )
 }
 
 #Preview("Chart", as: .content, using: ReportKitSimpleAttributes(reportID: "preview-chart")) {
     ReportKitSimpleLiveActivity()
 } contentStates: {
-    ReportKitSimpleAttributes.ContentState(
-        generatedAt: 1_774_000_300,
-        title: "Trend Report",
-        summary: "Last seven points show steady gain across the key funnel stage.",
-        status: .good,
-        action: "Open funnel trend to confirm next step.",
-        deepLink: nil,
-        visualStyle: .chart,
-        chartValues: [18, 24, 21, 35, 44, 55, 62],
-        chartTitle: "Conversion"
+    ReportKitSimpleDemoScenario.appStoreAnalytics.contentState(
+        now: Date(timeIntervalSince1970: 1_774_000_300)
     )
 }

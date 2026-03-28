@@ -93,19 +93,19 @@ private struct OnboardingPagerView: View {
             }
             .accessibilityIdentifier("onboarding-page-dots")
 
+            LocalDemoActivityMenu(label: "Try Demo Activity")
+
             Spacer()
 
-        
-                Button {
-                    model.nextStep()
-                } label: {
-                    Text(model.onboardingStepIndex == pages.count - 1 ? "Get Started" : "Continue")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-               
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("onboarding-next-button")
+            Button {
+                model.nextStep()
+            } label: {
+                Text(model.onboardingStepIndex == pages.count - 1 ? "Get Started" : "Continue")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("onboarding-next-button")
         }
     }
 }
@@ -136,6 +136,14 @@ private struct AuthScreen: View {
             Text(model.authMode == .signIn ? "Sign in with your ReportKit account to upload activity tokens." : "Create your ReportKit account with email and password.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Try a demo Live Activity before signing in.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
+                LocalDemoActivityMenu(label: "Demo Live Activities")
+            }
 
             VStack(alignment: .leading, spacing: 12) {
                 TextField("Email", text: $model.email)
@@ -199,18 +207,7 @@ private struct SignedInScreen: View {
             )
 
             HStack(spacing: 12) {
-                Menu("Local Test Activity") {
-                    Button("Minimal") {
-                        Task { await model.startLocalTestActivity(style: .minimal) }
-                    }
-                    Button("Banner") {
-                        Task { await model.startLocalTestActivity(style: .banner) }
-                    }
-                    Button("Chart") {
-                        Task { await model.startLocalTestActivity(style: .chart) }
-                    }
-                }
-                .buttonStyle(.bordered)
+                LocalDemoActivityMenu(label: "Local Test Activity")
 
                 Button("Refresh Status") {
                     Task { await model.refresh() }
@@ -249,6 +246,28 @@ private struct SignedInScreen: View {
         .padding(16)
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+}
+
+private struct LocalDemoActivityMenu: View {
+    @EnvironmentObject private var model: ReportKitSimpleAppModel
+
+    let label: String
+
+    var body: some View {
+        Menu(label) {
+            ForEach(ReportKitSimpleVisualStyle.allCases, id: \.self) { style in
+                Section(style.title) {
+                    ForEach(ReportKitSimpleDemoScenario.scenarios(for: style)) { scenario in
+                        Button(scenario.menuTitle) {
+                            Task { await model.startLocalTestActivity(scenario: scenario) }
+                        }
+                    }
+                }
+            }
+        }
+        .buttonStyle(.bordered)
+        .accessibilityIdentifier("local-demo-activity-menu")
     }
 }
 

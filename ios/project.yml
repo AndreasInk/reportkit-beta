@@ -33,6 +33,9 @@ targets:
     info:
       path: App/Resources/Info.plist
       properties:
+        # Prevent App Store Connect from asking export-compliance questions
+        # on each upload when the app only uses exempt encryption.
+        ITSAppUsesNonExemptEncryption: false
         NSSupportsLiveActivities: true
         UIBackgroundModes:
           - remote-notification
@@ -79,9 +82,11 @@ targets:
       - path: Shared
     settings:
       base:
+        BUNDLE_LOADER: $(TEST_HOST)
         PRODUCT_NAME: ReportKitSimpleTests
         PRODUCT_BUNDLE_IDENTIFIER: com.ai.ReportKitSimpleTests
         GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ReportKit.app/ReportKit
     dependencies:
       - target: ReportKitSimple
   ReportKitSimpleUITests:

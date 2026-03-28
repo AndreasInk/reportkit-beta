@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import ReportKitSimple
+@testable import ReportKit
 
 enum TestAuthError: Error {
     case testError
@@ -170,10 +170,53 @@ struct ReportKitSimpleTests {
     @Test("SignIn mode validation remains present")
     func reportKitAttributesContract() {
         let state = ReportKitSimpleAttributes.ContentState.preview
-        #expect(state.title == "Daily Pulse")
+        #expect(state.title == "Mixpanel Funnel")
         #expect(state.summary == "Revenue is steady. Trial-to-paid dipped after yesterday's paywall experiment.")
         #expect(state.status == .warning)
-        #expect(state.action == "Review the new paywall copy before noon.")
+        #expect(state.action == "Open the experiment and inspect the conversion cohort.")
+    }
+
+    @Test("Demo scenarios cover source-specific operator contexts")
+    func demoScenariosCoverOperatorContexts() {
+        #expect(ReportKitSimpleDemoScenario.scenarios(for: .minimal) == [.opsCalm, .releaseReadiness])
+        #expect(ReportKitSimpleDemoScenario.scenarios(for: .banner) == [.supabaseErrors, .gcloudIncident])
+        #expect(ReportKitSimpleDemoScenario.scenarios(for: .chart) == [.mixpanelFunnel, .appStoreAnalytics])
+
+        let supabaseState = ReportKitSimpleDemoScenario.supabaseErrors.contentState(
+            now: Date(timeIntervalSince1970: 1_774_000_400)
+        )
+        #expect(supabaseState.status == .critical)
+        #expect(supabaseState.resolvedVisualStyle == .banner)
+        #expect(supabaseState.deepLink == "reportkitsimple://demo/supabase-errors")
+
+        let appStoreState = ReportKitSimpleDemoScenario.appStoreAnalytics.contentState(
+            now: Date(timeIntervalSince1970: 1_774_000_500)
+        )
+        #expect(appStoreState.resolvedVisualStyle == .chart)
+        #expect(appStoreState.chartTitle == "Page Conversion (%)")
+        #expect(appStoreState.chartValues == [5.4, 5.3, 5.2, 4.9, 4.6, 4.5, 4.4])
+    }
+
+    @Test("Long live activity actions collapse into concise CTA labels")
+    func liveActivityActionsCollapseIntoCTAButtons() {
+        let gcloudState = ReportKitSimpleDemoScenario.gcloudIncident.contentState()
+        #expect(gcloudState.actionButtonText == "Inspect GCloud logs")
+
+        let analyticsState = ReportKitSimpleDemoScenario.appStoreAnalytics.contentState()
+        #expect(analyticsState.actionButtonText == "Compare screenshot sets")
+
+        let shortAction = ReportKitSimpleAttributes.ContentState(
+            generatedAt: 0,
+            title: "Test",
+            summary: "Test summary",
+            status: .good,
+            action: "Open dashboard",
+            deepLink: nil,
+            visualStyle: .banner,
+            chartValues: nil,
+            chartTitle: nil
+        )
+        #expect(shortAction.actionButtonText == "Open dashboard")
     }
 
     @Test("Config parser rejects unresolved placeholders outside tests")

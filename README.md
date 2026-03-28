@@ -1,5 +1,7 @@
 # ReportKit Simple v2
 
+![ReportKit README bento](docs/assets/reportkit-readme-bento.png)
+
 Minimal parallel implementation of ReportKit focused on one job:
 
 - authenticate both CLI and iPhone with the same Supabase account
