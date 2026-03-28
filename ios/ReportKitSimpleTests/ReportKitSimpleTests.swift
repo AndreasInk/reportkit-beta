@@ -181,6 +181,7 @@ struct ReportKitSimpleTests {
         #expect(ReportKitSimpleDemoScenario.scenarios(for: .minimal) == [.opsCalm, .releaseReadiness])
         #expect(ReportKitSimpleDemoScenario.scenarios(for: .banner) == [.supabaseErrors, .gcloudIncident])
         #expect(ReportKitSimpleDemoScenario.scenarios(for: .chart) == [.mixpanelFunnel, .appStoreAnalytics])
+        #expect(ReportKitSimpleDemoScenario.scenarios(for: .progress) == [.codexAgentProgress])
 
         let supabaseState = ReportKitSimpleDemoScenario.supabaseErrors.contentState(
             now: Date(timeIntervalSince1970: 1_774_000_400)
@@ -195,6 +196,14 @@ struct ReportKitSimpleTests {
         #expect(appStoreState.resolvedVisualStyle == .chart)
         #expect(appStoreState.chartTitle == "Page Conversion (%)")
         #expect(appStoreState.chartValues == [5.4, 5.3, 5.2, 4.9, 4.6, 4.5, 4.4])
+
+        let progressState = ReportKitSimpleDemoScenario.codexAgentProgress.contentState(
+            now: Date(timeIntervalSince1970: 1_774_000_600)
+        )
+        #expect(progressState.resolvedVisualStyle == .progress)
+        #expect(progressState.progressPercent == 68)
+        #expect(progressState.completedSteps == 17)
+        #expect(progressState.totalSteps == 25)
     }
 
     @Test("Long live activity actions collapse into concise CTA labels")
@@ -217,6 +226,84 @@ struct ReportKitSimpleTests {
             chartTitle: nil
         )
         #expect(shortAction.actionButtonText == "Open dashboard")
+    }
+
+    @Test("Progress helpers prefer percent and clamp derived values")
+    func progressHelpersPreferPercentAndClampValues() {
+        let percentOnly = ReportKitSimpleAttributes.ContentState(
+            generatedAt: 0,
+            title: "Task",
+            summary: "Operation",
+            status: .good,
+            action: nil,
+            deepLink: nil,
+            visualStyle: .progress,
+            chartValues: nil,
+            chartTitle: nil,
+            progressPercent: 135,
+            completedSteps: nil,
+            totalSteps: nil
+        )
+        #expect(percentOnly.normalizedProgressPercent == 100)
+        #expect(percentOnly.progressFraction == 1)
+        #expect(percentOnly.progressSummaryText == "100% complete")
+        #expect(percentOnly.compactProgressLabel == "100%")
+
+        let stepsOnly = ReportKitSimpleAttributes.ContentState(
+            generatedAt: 0,
+            title: "Task",
+            summary: "Operation",
+            status: .warning,
+            action: nil,
+            deepLink: nil,
+            visualStyle: .progress,
+            chartValues: nil,
+            chartTitle: nil,
+            progressPercent: nil,
+            completedSteps: 4,
+            totalSteps: 8
+        )
+        #expect(stepsOnly.normalizedStepCounts?.completed == 4)
+        #expect(stepsOnly.normalizedStepCounts?.total == 8)
+        #expect(stepsOnly.progressFraction == 0.5)
+        #expect(stepsOnly.progressSummaryText == "4 of 8 steps")
+        #expect(stepsOnly.compactProgressLabel == "4/8")
+
+        let mixed = ReportKitSimpleAttributes.ContentState(
+            generatedAt: 0,
+            title: "Task",
+            summary: "Operation",
+            status: .critical,
+            action: nil,
+            deepLink: nil,
+            visualStyle: .progress,
+            chartValues: nil,
+            chartTitle: nil,
+            progressPercent: 52,
+            completedSteps: 4,
+            totalSteps: 8
+        )
+        #expect(mixed.progressFraction == 0.52)
+        #expect(mixed.progressSummaryText == "52% complete • 4 of 8 steps")
+        #expect(mixed.compactProgressLabel == "52%")
+
+        let invalidSteps = ReportKitSimpleAttributes.ContentState(
+            generatedAt: 0,
+            title: "Task",
+            summary: "Operation",
+            status: .warning,
+            action: nil,
+            deepLink: nil,
+            visualStyle: .progress,
+            chartValues: nil,
+            chartTitle: nil,
+            progressPercent: nil,
+            completedSteps: 4,
+            totalSteps: 0
+        )
+        #expect(invalidSteps.normalizedStepCounts == nil)
+        #expect(invalidSteps.progressFraction == nil)
+        #expect(invalidSteps.progressSummaryText == nil)
     }
 
     @Test("Config parser rejects unresolved placeholders outside tests")

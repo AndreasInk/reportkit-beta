@@ -1,7 +1,23 @@
 export type ApnsEnv = "sandbox" | "production";
 export type LiveActivityEvent = "start" | "update" | "end";
 export type Status = "good" | "warning" | "critical";
-export type VisualStyle = "minimal" | "banner" | "chart";
+export type VisualStyle = "minimal" | "banner" | "chart" | "progress";
+
+export interface LiveActivityPayload {
+  generatedAt?: number;
+  title: string;
+  summary: string;
+  status?: Status;
+  action?: string;
+  deepLink?: string;
+  visualStyle?: VisualStyle;
+  chartValues?: number[];
+  chartTitle?: string;
+  progressPercent?: number;
+  completedSteps?: number;
+  totalSteps?: number;
+  [key: string]: unknown;
+}
 
 export interface CliSessionMetadata {
   userID: string;
@@ -35,7 +51,7 @@ export interface ReportKitConfig {
 
 export interface SendRequestBody {
   event: LiveActivityEvent;
-  payload: Record<string, unknown>;
+  payload: LiveActivityPayload;
   apns_env: ApnsEnv;
   idempotency_key: string;
   attributes_type?: string;

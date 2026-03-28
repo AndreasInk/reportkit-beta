@@ -14,6 +14,9 @@ struct ReportKitSimpleAttributes: ActivityAttributes {
         var visualStyle: ReportKitSimpleVisualStyle?
         var chartValues: [Double]?
         var chartTitle: String?
+        var progressPercent: Double? = nil
+        var completedSteps: Int? = nil
+        var totalSteps: Int? = nil
     }
 
     var reportID: String
@@ -51,6 +54,7 @@ enum ReportKitSimpleVisualStyle: String, Codable, Hashable, CaseIterable {
     case minimal
     case banner
     case chart
+    case progress
 
     var title: String {
         switch self {
@@ -60,6 +64,8 @@ enum ReportKitSimpleVisualStyle: String, Codable, Hashable, CaseIterable {
             return "Banner"
         case .chart:
             return "Chart"
+        case .progress:
+            return "Progress"
         }
     }
 }
@@ -71,6 +77,7 @@ enum ReportKitSimpleDemoScenario: String, CaseIterable, Hashable, Identifiable {
     case appStoreAnalytics
     case supabaseErrors
     case gcloudIncident
+    case codexAgentProgress
 
     var id: String { rawValue }
 
@@ -92,6 +99,8 @@ enum ReportKitSimpleDemoScenario: String, CaseIterable, Hashable, Identifiable {
             return "Supabase Errors"
         case .gcloudIncident:
             return "GCloud Incident"
+        case .codexAgentProgress:
+            return "Agent Progress"
         }
     }
 
@@ -109,6 +118,8 @@ enum ReportKitSimpleDemoScenario: String, CaseIterable, Hashable, Identifiable {
             return "Supabase logs"
         case .gcloudIncident:
             return "GCloud logs"
+        case .codexAgentProgress:
+            return "Codex task run"
         }
     }
 
@@ -124,6 +135,8 @@ enum ReportKitSimpleDemoScenario: String, CaseIterable, Hashable, Identifiable {
             return .banner
         case .mixpanelFunnel, .appStoreAnalytics:
             return .chart
+        case .codexAgentProgress:
+            return .progress
         }
     }
 
@@ -211,6 +224,21 @@ enum ReportKitSimpleDemoScenario: String, CaseIterable, Hashable, Identifiable {
                 chartValues: nil,
                 chartTitle: nil
             )
+        case .codexAgentProgress:
+            return ReportKitSimpleAttributes.ContentState(
+                generatedAt: generatedAt,
+                title: "Ship Agent Progress Template",
+                summary: "Updated the widget payload schema and now wiring the Dynamic Island progress bar.",
+                status: .warning,
+                action: "Open the latest implementation notes.",
+                deepLink: "reportkitsimple://demo/codex-agent-progress",
+                visualStyle: visualStyle,
+                chartValues: nil,
+                chartTitle: nil,
+                progressPercent: 68,
+                completedSteps: 17,
+                totalSteps: 25
+            )
         }
     }
 }
@@ -225,6 +253,71 @@ extension ReportKitSimpleAttributes.ContentState {
             return true
         }
         return false
+    }
+
+    var normalizedProgressPercent: Double? {
+        guard let progressPercent else { return nil }
+        return min(max(progressPercent, 0), 100)
+    }
+
+    var normalizedStepCounts: (completed: Int, total: Int)? {
+        guard
+            let completedSteps,
+            let totalSteps,
+            totalSteps > 0
+        else {
+            return nil
+        }
+
+        let safeCompleted = min(max(completedSteps, 0), totalSteps)
+        return (safeCompleted, totalSteps)
+    }
+
+    var progressFraction: Double? {
+        if let normalizedProgressPercent {
+            return normalizedProgressPercent / 100
+        }
+
+        if let normalizedStepCounts {
+            return Double(normalizedStepCounts.completed) / Double(normalizedStepCounts.total)
+        }
+
+        return nil
+    }
+
+    var progressSummaryText: String? {
+        let percentText: String? = {
+            guard let normalizedProgressPercent else { return nil }
+            return "\(Int(normalizedProgressPercent.rounded()))% complete"
+        }()
+
+        let stepText: String? = {
+            guard let normalizedStepCounts else { return nil }
+            return "\(normalizedStepCounts.completed) of \(normalizedStepCounts.total) steps"
+        }()
+
+        switch (percentText, stepText) {
+        case let (percentText?, stepText?):
+            return "\(percentText) • \(stepText)"
+        case let (percentText?, nil):
+            return percentText
+        case let (nil, stepText?):
+            return stepText
+        case (nil, nil):
+            return nil
+        }
+    }
+
+    var compactProgressLabel: String? {
+        if let normalizedProgressPercent {
+            return "\(Int(normalizedProgressPercent.rounded()))%"
+        }
+
+        if let normalizedStepCounts {
+            return "\(normalizedStepCounts.completed)/\(normalizedStepCounts.total)"
+        }
+
+        return nil
     }
 
     var actionButtonText: String? {

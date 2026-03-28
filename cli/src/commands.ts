@@ -5,7 +5,7 @@ import { configPath, readConfig, writeConfig } from "./config.js";
 import { buildSendBody, normalizeApnsEnv, normalizeStatus, normalizeVisualStyle, optionalFlag, parseArgs, requiredFlag } from "./format.js";
 import { promptForPassword, readPasswordFromStdin } from "./password.js";
 import { deleteSessionSecrets, loadSessionSecrets, sessionStorePath } from "./secureSessionStore.js";
-import type { ReportKitConfig } from "./types.js";
+import type { LiveActivityPayload, ReportKitConfig } from "./types.js";
 
 function describeSessionExpiry(expiresAt: string, now: Date = new Date()): string[] {
   const expiry = new Date(expiresAt);
@@ -105,7 +105,7 @@ export async function sendCommand(argv: string[]): Promise<void> {
 
   let event: "start" | "update" | "end";
   let activityId: string;
-  let payload: Record<string, unknown>;
+  let payload: LiveActivityPayload;
   let idempotencyKey = optionalFlag(flags, "idempotency-key");
   let apnsEnv = normalizeApnsEnv(optionalFlag(flags, "apns-env"));
   let visualStyle = normalizeVisualStyle(optionalFlag(flags, "visual-style"));
@@ -114,10 +114,10 @@ export async function sendCommand(argv: string[]): Promise<void> {
     const parsed = JSON.parse(fs.readFileSync(path.resolve(file), "utf8")) as {
       event: "start" | "update" | "end";
       activityId?: string;
-      payload: Record<string, unknown>;
+      payload: LiveActivityPayload;
       idempotencyKey?: string;
       apnsEnv?: "sandbox" | "production";
-      visualStyle?: "minimal" | "banner" | "chart";
+      visualStyle?: "minimal" | "banner" | "chart" | "progress";
     };
     event = parsed.event;
     activityId = parsed.activityId ?? "reportkit-simple";
@@ -180,12 +180,15 @@ Contract reminder for send payload:
 { "event": "start|update|end", "activityId": "...", "payload": { "generatedAt": 1710000000, "title": "...", "summary": "...", "status": "good|warning|critical", "action": "...", "deepLink": "..." } }
 
 Optional visual style override:
-{ "visualStyle": "minimal|banner|chart" }  // default is minimal
+{ "visualStyle": "minimal|banner|chart|progress" }  // default is minimal
+
+Agent progress payload fields:
+{ "payload": { "progressPercent": 68, "completedSteps": 17, "totalSteps": 25 } }
 
 Preferred CLI usage:
 - reportkit status
 - reportkit send --file payload.json
-- reportkit send --event update --activity-id ID --title TITLE --summary TEXT --status warning --visual-style chart
+- reportkit send --event update --activity-id ID --title TITLE --summary TEXT --status warning --visual-style progress
 
 Do not use cron here; scheduling is handled by Codex/Claude Code in this workflow.
 `;

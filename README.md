@@ -150,6 +150,7 @@ reportkit skill print --target claude
 - The CLI stores access and refresh tokens in `~/.config/reportkit-simple/session-store.json` with local-only permissions and mirrors them to macOS Keychain as best-effort backup.
 - The iOS app reads `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY` from `Info.plist`.
 - The CLI does not manage cron. Scheduling should happen in your Codex / Claude workflow.
+- A repo-local Codex hooks example for Bash tool-use events lives in [docs/codex-hooks.md](docs/codex-hooks.md).
 
 ## Open Source Safety
 

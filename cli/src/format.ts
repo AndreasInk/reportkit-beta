@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import type { ApnsEnv, SendRequestBody, Status, VisualStyle } from "./types.js";
+import type { ApnsEnv, LiveActivityPayload, SendRequestBody, Status, VisualStyle } from "./types.js";
 
 export function parseArgs(argv: string[]): Map<string, string | true> {
   const output = new Map<string, string | true>();
@@ -51,7 +51,7 @@ export function normalizeStatus(value: string | undefined): Status {
 }
 
 export function normalizeVisualStyle(value: string | undefined): VisualStyle {
-  if (!value || value === "minimal" || value === "banner" || value === "chart") {
+  if (!value || value === "minimal" || value === "banner" || value === "chart" || value === "progress") {
     return (value as VisualStyle | undefined) ?? "minimal";
   }
   throw new Error(`Invalid visual style: ${value}`);
@@ -60,7 +60,7 @@ export function normalizeVisualStyle(value: string | undefined): VisualStyle {
 export function buildSendBody(input: {
   event: "start" | "update" | "end";
   activityId: string;
-  payload: Record<string, unknown>;
+  payload: LiveActivityPayload;
   apnsEnv?: ApnsEnv;
   idempotencyKey?: string;
   visualStyle?: VisualStyle;

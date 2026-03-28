@@ -7,10 +7,13 @@ private enum LiveActivityLayout {
     static let outerVerticalPadding: CGFloat = 14
     static let sectionSpacing: CGFloat = 12
     static let compactSectionSpacing: CGFloat = 10
+    static let progressSpacing: CGFloat = 8
     static let chartSpacing: CGFloat = 10
     static let chartHeight: CGFloat = 40
     static let chartBarWidth: CGFloat = 10
     static let chartBarSpacing: CGFloat = 8
+    static let progressBarHeight: CGFloat = 8
+    static let compactProgressBarHeight: CGFloat = 6
     static let actionHorizontalPadding: CGFloat = 14
     static let actionVerticalPadding: CGFloat = 10
     static let actionCornerRadius: CGFloat = 16
@@ -44,7 +47,7 @@ struct ReportKitSimpleLiveActivity: Widget {
             } compactLeading: {
                 StatusDot(status: context.state.status)
             } compactTrailing: {
-                Text(context.state.status.label)
+                Text(context.state.compactProgressLabel ?? context.state.status.label)
                     .font(.caption2)
             } minimal: {
                 StatusDot(status: context.state.status)
@@ -64,6 +67,8 @@ private struct ReportKitSimpleLiveActivityContent: View {
             BannerLockScreenContent(state: state)
         case .chart:
             ChartLockScreenContent(state: state)
+        case .progress:
+            ProgressLockScreenContent(state: state)
         }
     }
 }
@@ -117,6 +122,40 @@ private struct BannerLockScreenContent: View {
 
             if let action = state.actionButtonText {
                 ActionPill(text: action)
+            }
+        }
+    }
+}
+
+private struct ProgressLockScreenContent: View {
+    let state: ReportKitSimpleAttributes.ContentState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: LiveActivityLayout.progressSpacing) {
+            HStack {
+                StatusPill(status: state.status)
+                Spacer()
+                TimeBadge(timestamp: state.generatedAt)
+            }
+
+            Text(state.title)
+                .font(.headline)
+                .lineLimit(2)
+
+            Text(state.summary)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(3)
+
+            if let progressFraction = state.progressFraction {
+                ProgressBar(progress: progressFraction, color: state.status.color)
+            }
+
+            if let progressSummaryText = state.progressSummaryText {
+                Text(progressSummaryText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -197,10 +236,17 @@ private struct DynamicIslandBottom: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let action = state.action, !action.isEmpty {
-                Text(action)
-                    .font(.caption)
-                    .lineLimit(2)
+            Text(bottomText)
+                .font(.caption)
+                .lineLimit(state.resolvedVisualStyle == .progress ? 3 : 2)
+
+            if state.resolvedVisualStyle == .progress, let progressFraction = state.progressFraction {
+                ProgressBar(
+                    progress: progressFraction,
+                    color: state.status.color,
+                    height: LiveActivityLayout.compactProgressBarHeight
+                )
+                .frame(height: LiveActivityLayout.compactProgressBarHeight)
             }
 
             if state.resolvedVisualStyle == .chart {
@@ -212,9 +258,27 @@ private struct DynamicIslandBottom: View {
                 }
             }
 
-            Text(state.status.label)
-                .font(.caption)
+            if let progressSummaryText = state.progressSummaryText, state.resolvedVisualStyle == .progress {
+                Text(progressSummaryText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(state.status.label)
+                    .font(.caption)
+            }
         }
+    }
+
+    private var bottomText: String {
+        if state.resolvedVisualStyle == .progress {
+            return state.summary
+        }
+
+        if let action = state.action, !action.isEmpty {
+            return action
+        }
+
+        return state.summary
     }
 
     private var fallbackChartValues: [Double] {
@@ -237,6 +301,28 @@ private struct DynamicIslandBottom: View {
         let maxValue = values.max() ?? 1
         let safeMax = max(maxValue, 1)
         return values.map { max(0, $0 / safeMax) }
+    }
+}
+
+private struct ProgressBar: View {
+    let progress: Double
+    let color: Color
+    var height: CGFloat = LiveActivityLayout.progressBarHeight
+
+    var body: some View {
+        let clampedProgress = min(max(progress, 0), 1)
+
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(color.opacity(0.16))
+
+                Capsule()
+                    .fill(color)
+                    .frame(width: max(geometry.size.width * clampedProgress, clampedProgress > 0 ? height : 0))
+            }
+        }
+        .frame(height: height)
     }
 }
 
@@ -324,5 +410,32 @@ private struct ActionPill: View {
 } contentStates: {
     ReportKitSimpleDemoScenario.appStoreAnalytics.contentState(
         now: Date(timeIntervalSince1970: 1_774_000_300)
+    )
+}
+
+#Preview("Progress", as: .content, using: ReportKitSimpleAttributes(reportID: "preview-progress")) {
+    ReportKitSimpleLiveActivity()
+} contentStates: {
+    ReportKitSimpleDemoScenario.codexAgentProgress.contentState(
+        now: Date(timeIntervalSince1970: 1_774_000_400)
+    )
+}
+
+#Preview("Progress Critical", as: .content, using: ReportKitSimpleAttributes(reportID: "preview-progress-critical")) {
+    ReportKitSimpleLiveActivity()
+} contentStates: {
+    ReportKitSimpleAttributes.ContentState(
+        generatedAt: 1_774_000_500,
+        title: "Recover Failed Deploy",
+        summary: "Rolled back the API worker and now verifying that background jobs are draining normally.",
+        status: .critical,
+        action: "Open deploy timeline",
+        deepLink: "reportkitsimple://demo/progress-critical",
+        visualStyle: .progress,
+        chartValues: nil,
+        chartTitle: nil,
+        progressPercent: 34,
+        completedSteps: 3,
+        totalSteps: 9
     )
 }

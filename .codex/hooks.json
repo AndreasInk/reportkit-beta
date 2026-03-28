@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/scripts/reportkit_codex_tool_hook.py\" pre",
+            "statusMessage": "Preparing ReportKit tool-use payload"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/scripts/reportkit_codex_tool_hook.py\" post",
+            "statusMessage": "Updating ReportKit tool-use payload"
+          }
+        ]
+      }
+    ]
+  }
+}

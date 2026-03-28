@@ -48,3 +48,18 @@ ReportKit Beta is a minimal parallel implementation focused only on:
 
 Scheduling for sending is handled in Codex/Claude workflows.  
 The CLI stays focused on explicit `reportkit send` operations.
+
+## Progress Live Activity payload
+
+The shared Live Activity payload now also supports agent-progress fields:
+
+- `progressPercent`
+- `completedSteps`
+- `totalSteps`
+
+Use `visualStyle: "progress"` for agent visibility templates where:
+
+- `title` is the high-level task
+- `summary` is the latest operation
+- `progressPercent` is the preferred fill source
+- `completedSteps` and `totalSteps` are optional supporting metadata

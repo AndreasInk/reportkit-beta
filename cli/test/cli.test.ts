@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { Readable } from "node:stream";
-import { buildSendBody } from "../src/format.js";
+import { buildSendBody, normalizeVisualStyle } from "../src/format.js";
 import { resolveAuthCredentials, statusCommand } from "../src/commands.js";
 import { configPath, defaultConfig, readConfig, writeConfig } from "../src/config.js";
 import { cliSignIn } from "../src/api.js";
@@ -57,7 +57,7 @@ test("buildSendBody adds ReportKitSimple attributes for start events", () => {
   const body = buildSendBody({
     event: "start",
     activityId: "daily-pulse",
-    payload: { title: "Daily Pulse" }
+    payload: { title: "Daily Pulse", summary: "Start event" }
   });
 
   assert.equal(body.attributes_type, "ReportKitSimpleAttributes");
@@ -68,11 +68,35 @@ test("buildSendBody uses explicit idempotency key when provided", () => {
   const body = buildSendBody({
     event: "update",
     activityId: "daily-pulse",
-    payload: { title: "Daily Pulse" },
+    payload: { title: "Daily Pulse", summary: "Update event" },
     idempotencyKey: "fixed-key"
   });
 
   assert.equal(body.idempotency_key, "fixed-key");
+});
+
+test("normalizeVisualStyle accepts progress", () => {
+  assert.equal(normalizeVisualStyle("progress"), "progress");
+});
+
+test("buildSendBody preserves progress payload fields", () => {
+  const body = buildSendBody({
+    event: "update",
+    activityId: "codex-agent",
+    payload: {
+      title: "Ship Agent Progress Template",
+      summary: "Updated the widget payload schema.",
+      progressPercent: 68,
+      completedSteps: 17,
+      totalSteps: 25
+    },
+    visualStyle: "progress"
+  });
+
+  assert.equal(body.payload.visualStyle, "progress");
+  assert.equal(body.payload.progressPercent, 68);
+  assert.equal(body.payload.completedSteps, 17);
+  assert.equal(body.payload.totalSteps, 25);
 });
 
 test("statusCommand labels expiry as cached local session metadata", () => {
