@@ -29,9 +29,9 @@ ReportKit Simple is a minimal parallel implementation focused only on:
 
 ### Supabase additions
 
-- No new pairing tables/functions.
+- No new pairing tables/functions beyond the vendored backend in `supabase/`.
 - No CLI-session tables.
-- Existing authentication + token + live-activity routes are unchanged.
+- Authentication + token + live-activity routes are part of this repo and can be deployed into a fresh Supabase project.
 
 ## Runtime Boundaries
 

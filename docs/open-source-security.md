@@ -17,6 +17,7 @@ The public repo may include:
 
 - `REPORTKIT_SUPABASE_URL`
 - `REPORTKIT_SUPABASE_ANON_KEY`
+- Supabase edge function source and SQL migrations
 - placeholder examples for local setup
 
 `REPORTKIT_SUPABASE_ANON_KEY` is treated as public client configuration. It is not a privileged backend credential.

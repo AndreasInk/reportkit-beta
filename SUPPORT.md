@@ -4,6 +4,7 @@
 
 - Setup and usage: [`README.md`](README.md)
 - Architecture and security notes: [`docs/architecture.md`](docs/architecture.md), [`docs/open-source-security.md`](docs/open-source-security.md)
+- Supabase deployment notes: [`supabase/PRODUCTION_ROLLOUT.md`](supabase/PRODUCTION_ROLLOUT.md)
 - Bugs and feature requests: GitHub Issues
 
 ## Use Security Reporting Instead Of Issues For

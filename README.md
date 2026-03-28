@@ -13,6 +13,7 @@ This lives beside the existing ReportKit implementation. It does not replace the
 
 - `ios/`: `ReportKitSimple.xcodeproj` and the minimal iOS app + widget
 - `cli/`: TypeScript npm package exposed as `reportkit`
+- `supabase/`: edge functions, migrations, and rollout notes for a self-hosted Supabase project
 - `docs/`: architecture notes, UI validation notes, and screenshots
 
 ## Product Flow
@@ -28,8 +29,18 @@ This lives beside the existing ReportKit implementation. It does not replace the
 - iOS keeps normal Supabase auth.
 - CLI stores session metadata in `~/.config/reportkit-simple/config.json`.
 - CLI stores access/refresh tokens in `~/.config/reportkit-simple/session-store.json` with `0600` permissions and mirrors them to macOS Keychain as best-effort backup.
-- Existing token upload and live-activity send endpoints are reused.
+- Token upload and live-activity send endpoints are implemented in the vendored `supabase/functions/` directory.
 - No pairing API is required.
+
+## Supabase Backend
+
+This repo now includes the Supabase backend needed to stand up a fresh project:
+
+- edge functions in [`supabase/functions/`](/Users/andreas/Desktop/reportkit-simple/supabase/functions)
+- SQL migrations in [`supabase/migrations/`](/Users/andreas/Desktop/reportkit-simple/supabase/migrations)
+- deployment notes in [`supabase/PRODUCTION_ROLLOUT.md`](/Users/andreas/Desktop/reportkit-simple/supabase/PRODUCTION_ROLLOUT.md)
+
+That keeps the public repo self-contained: clients still expose only `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY`, while the edge functions use server-side secrets inside Supabase for APNs delivery.
 
 ## Commands
 
