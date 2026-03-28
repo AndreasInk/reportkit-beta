@@ -28,13 +28,8 @@ async function resolveSupabaseUser(
   supabase: ReturnType<typeof createServiceClient>,
   accessToken: string
 ): Promise<{ id: string } | null> {
-  // Some Supabase edge functions receive an authenticated user id header.
-  const gatewayUser = req.headers.get("x-supabase-auth-user");
-  if (gatewayUser && gatewayUser.trim().length > 0) {
-    return { id: gatewayUser.trim() };
-  }
-
-  // Primary path: validate bearer token directly.
+  // Derive identity exclusively from the supplied bearer token. Never trust
+  // user identity headers from the request, because callers can spoof them.
   const supabaseUrl = requireEnv("SUPABASE_URL");
   const anonOrServiceKey =
     Deno.env.get("SUPABASE_ANON_KEY")?.trim() ??

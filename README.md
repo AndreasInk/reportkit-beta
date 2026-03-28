@@ -92,11 +92,11 @@ reportkit skill print --target claude
 
 ## Where Things Live
 
-- [`/Users/andreas/Desktop/reportkit-simple/ios`](/Users/andreas/Desktop/reportkit-simple/ios): iOS app, widget, and Xcode project
-- [`/Users/andreas/Desktop/reportkit-simple/cli`](/Users/andreas/Desktop/reportkit-simple/cli): TypeScript CLI package
-- [`/Users/andreas/Desktop/reportkit-simple/supabase/functions`](/Users/andreas/Desktop/reportkit-simple/supabase/functions): Supabase edge functions
-- [`/Users/andreas/Desktop/reportkit-simple/supabase/migrations`](/Users/andreas/Desktop/reportkit-simple/supabase/migrations): database migrations
-- [`/Users/andreas/Desktop/reportkit-simple/docs`](/Users/andreas/Desktop/reportkit-simple/docs): architecture and security notes
+- [`ios/`](ios/): iOS app, widget, and Xcode project
+- [`cli/`](cli/): TypeScript CLI package
+- [`supabase/functions/`](supabase/functions/): Supabase edge functions
+- [`supabase/migrations/`](supabase/migrations/): database migrations
+- [`docs/`](docs/): architecture and security notes
 
 ## Important Notes
 
@@ -114,4 +114,4 @@ This repo does not include:
 - private release overrides
 - future push-service secrets
 
-See [`/Users/andreas/Desktop/reportkit-simple/docs/open-source-security.md`](/Users/andreas/Desktop/reportkit-simple/docs/open-source-security.md) for details.
+See [`docs/open-source-security.md`](docs/open-source-security.md) for details.

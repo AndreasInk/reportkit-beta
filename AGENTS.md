@@ -35,6 +35,7 @@ This repo does not replace the older root implementation yet.
 - No pairing API is required.
 - Token upload and live-activity send routes live in `supabase/functions/`.
 - Scheduling is intentionally out of scope for the CLI.
+- The authenticated edge functions are currently deployed with `--no-verify-jwt`, so auth is enforced inside the function code rather than by the Supabase gateway.
 
 ## Important Paths
 
@@ -94,6 +95,21 @@ This repo must stay safe to open source. It must not contain:
 - future relay or push-service secrets
 
 More detail lives in `docs/open-source-security.md`.
+
+## Edge Function Auth Note
+
+The following functions are currently expected to be deployed with `--no-verify-jwt`:
+- `reportkit-token`
+- `reportkit-device-token`
+- `reportkit-send-live-activity`
+
+Reason:
+- the project's legacy gateway JWT verification mode rejects valid modern Supabase access tokens
+- function-level auth via `requireUser(...)` is currently the working enforcement point
+
+Implication:
+- do not trust caller-supplied identity headers
+- changes to shared auth helpers in `supabase/functions/_shared/supabase.ts` are security-critical
 
 ## Git Hook
 

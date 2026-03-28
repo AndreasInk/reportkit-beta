@@ -52,11 +52,31 @@ supabase secrets set REPORTKIT_APNS_TOPIC_SUFFIX=.push-type.liveactivity
 3. Deploy functions.
 
 ```bash
-supabase functions deploy reportkit-token
-supabase functions deploy reportkit-device-token
-supabase functions deploy reportkit-send-live-activity
+supabase functions deploy reportkit-token --no-verify-jwt
+supabase functions deploy reportkit-device-token --no-verify-jwt
+supabase functions deploy reportkit-send-live-activity --no-verify-jwt
 supabase functions deploy reportkit-latest-token
 ```
+
+### Important JWT Verification Note
+
+The authenticated ReportKit functions are currently deployed with `--no-verify-jwt`.
+
+That means:
+
+1. Supabase's edge gateway is **not** the primary JWT enforcement point for these functions.
+2. Authentication is enforced inside the function code via `requireUser(...)`.
+3. This is currently required because the project is using the legacy gateway JWT verification mode, which rejects valid modern Supabase access tokens with `Invalid JWT`.
+
+Affected functions:
+
+1. `reportkit-token`
+2. `reportkit-device-token`
+3. `reportkit-send-live-activity`
+
+Security consequence:
+
+If these functions continue to run with `--no-verify-jwt`, the in-function auth logic is the primary security boundary. Do not reintroduce trust in caller-controlled identity headers like `x-supabase-auth-user`.
 
 ## API Contract
 
