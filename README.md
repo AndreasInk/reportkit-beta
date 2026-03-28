@@ -2,127 +2,116 @@
 
 ![ReportKit README bento](docs/assets/reportkit-readme-bento.png)
 
-Minimal parallel implementation of ReportKit focused on one job:
+ReportKit Beta puts important app and ops signals into an iPhone Live Activity.
 
-- authenticate both CLI and iPhone with the same Supabase account
-- upload Live Activity tokens
-- send simple Live Activity updates
-- schedule reports through your Codex/Claude workflow
+It is a small system with three parts:
+- an iOS app + widget
+- a CLI called `reportkit`
+- Supabase edge functions for auth, token upload, and push delivery
 
-This is the current beta implementation of ReportKit. It lives beside the existing implementation and does not replace the current root yet.
+The goal is simple: sign in on your Mac and iPhone with the same account, then send Live Activity updates from the CLI or your own workflows.
 
-## Structure
+## What It Does
 
-- `ios/`: `ReportKitSimple.xcodeproj` and the minimal iOS app + widget
-- `cli/`: TypeScript npm package exposed as `reportkit`
-- `supabase/`: edge functions, migrations, and rollout notes for a self-hosted Supabase project
-- `docs/`: architecture notes, UI validation notes, and screenshots
+- signs the CLI and iPhone app into the same Supabase account
+- uploads Live Activity tokens from the phone
+- sends simple Live Activity updates from the CLI
+- leaves scheduling to Codex / Claude workflows instead of building cron into the CLI
 
-## Product Flow
+## Quick Start
 
-1. User installs the npm package.
-2. User runs `reportkit auth`.
-3. CLI stores session metadata in local config and keeps the bearer tokens in a separate local-only session store.
-4. User signs into the iOS app with the same account.
-5. `reportkit send` reuses the local Supabase access token to publish Live Activity updates.
+### 1. Set your Supabase keys
 
-## Runtime Boundaries
+The CLI needs:
+- `REPORTKIT_SUPABASE_URL`
+- `REPORTKIT_SUPABASE_ANON_KEY`
 
-- iOS keeps normal Supabase auth.
-- CLI stores session metadata in `~/.config/reportkit-simple/config.json`.
-- CLI stores access/refresh tokens in `~/.config/reportkit-simple/session-store.json` with `0600` permissions and mirrors them to macOS Keychain as best-effort backup.
-- Token upload and live-activity send endpoints are implemented in the vendored `supabase/functions/` directory.
-- No pairing API is required.
+```bash
+export REPORTKIT_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+export REPORTKIT_SUPABASE_ANON_KEY=YOUR_ANON_PUBLIC_KEY
+```
 
-## Supabase Backend
+You can also place them in `~/.reportkit/.env`.
 
-This repo now includes the Supabase backend needed to stand up a fresh project:
-
-- edge functions in [`supabase/functions/`](/Users/andreas/Desktop/reportkit-simple/supabase/functions)
-- SQL migrations in [`supabase/migrations/`](/Users/andreas/Desktop/reportkit-simple/supabase/migrations)
-- deployment notes in [`supabase/PRODUCTION_ROLLOUT.md`](/Users/andreas/Desktop/reportkit-simple/supabase/PRODUCTION_ROLLOUT.md)
-
-That keeps the public repo self-contained: clients still expose only `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY`, while the edge functions use server-side secrets inside Supabase for APNs delivery.
-
-## Commands
+### 2. Install the CLI
 
 ```bash
 cd reportkit-simple/cli
 npm install
 npm run build
+```
 
-export REPORTKIT_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-export REPORTKIT_SUPABASE_ANON_KEY=YOUR_ANON_PUBLIC_KEY
+### 3. Sign in on the CLI
 
+```bash
 reportkit auth --email you@example.com
-# or for automation:
-printf '%s\n' 'your-password' | reportkit auth --email you@example.com --password-stdin
 reportkit status
-reportkit send --event update --activity-id daily-report --title "Revenue watch" --summary "Down 8% vs yesterday" --status warning
+```
+
+For automation:
+
+```bash
+printf '%s\n' 'your-password' | reportkit auth --email you@example.com --password-stdin
+```
+
+### 4. Sign in on the iPhone app
+
+Open the iOS app and sign in with the same email/password.
+
+The app will:
+- request notification permission
+- upload Live Activity tokens
+- show current token sync state once signed in
+
+### 5. Send a test Live Activity update
+
+```bash
+reportkit send \
+  --event update \
+  --activity-id daily-report \
+  --title "Revenue watch" \
+  --summary "Down 8% vs yesterday" \
+  --status warning
+```
+
+## Typical Flow
+
+1. Install the CLI.
+2. Sign in with `reportkit auth`.
+3. Sign in on the iPhone app with the same account.
+4. Run `reportkit send` manually or from your own workflow.
+
+## Useful Commands
+
+```bash
+reportkit status
 reportkit logout
 reportkit skill print --target codex
 reportkit skill print --target claude
 ```
 
-### Configuration
+## Where Things Live
 
-The CLI requires both `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY` for local operation.
+- [`/Users/andreas/Desktop/reportkit-simple/ios`](/Users/andreas/Desktop/reportkit-simple/ios): iOS app, widget, and Xcode project
+- [`/Users/andreas/Desktop/reportkit-simple/cli`](/Users/andreas/Desktop/reportkit-simple/cli): TypeScript CLI package
+- [`/Users/andreas/Desktop/reportkit-simple/supabase/functions`](/Users/andreas/Desktop/reportkit-simple/supabase/functions): Supabase edge functions
+- [`/Users/andreas/Desktop/reportkit-simple/supabase/migrations`](/Users/andreas/Desktop/reportkit-simple/supabase/migrations): database migrations
+- [`/Users/andreas/Desktop/reportkit-simple/docs`](/Users/andreas/Desktop/reportkit-simple/docs): architecture and security notes
 
-- Resolution order is:
-  1. process environment
-  2. machine-global `~/.reportkit/.env`
-- Placeholder values are rejected up front with a clear error.
-- `~/.config/reportkit-simple/config.json` stores CLI session metadata only. It does not contain access or refresh tokens.
-- `~/.config/reportkit-simple/session-store.json` stores the bearer tokens with local-only permissions and is mirrored to macOS Keychain as best-effort backup.
+## Important Notes
 
-The iOS app reads the same keys from `Info.plist` (`REPORTKIT_SUPABASE_URL`, `REPORTKIT_SUPABASE_ANON_KEY`) and will precondition-fail at launch if unresolved.
+- The CLI stores session metadata in `~/.config/reportkit-simple/config.json`.
+- The CLI stores access and refresh tokens in `~/.config/reportkit-simple/session-store.json` with local-only permissions and mirrors them to macOS Keychain as best-effort backup.
+- The iOS app reads `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY` from `Info.plist`.
+- The CLI does not manage cron. Scheduling should happen in your Codex / Claude workflow.
 
-## Public Repo Notes
+## Open Source Safety
 
-This source checkout is intended to stay safe to open source.
-
-The repo does not include:
-
+This repo does not include:
 - Supabase service-role keys
 - APNs credentials
 - Apple signing assets
 - private release overrides
-- future relay or push-service secrets
+- future push-service secrets
 
-More detail lives in [`docs/open-source-security.md`](docs/open-source-security.md).
-
-## Local Git Hook
-
-To block obvious hardcoded credentials before commit:
-
-```bash
-./scripts/install-git-hooks.sh
-```
-
-That installs `.githooks/pre-commit` as the repo hook path and rejects staged:
-
-- `.env` files and local session stores
-- private keys and certificates
-- high-signal token formats
-- `reportkit auth ... --password ...` usage
-- direct `REPORTKIT_PASSWORD=` assignments
-
-### Skill
-
-- `reportkit skill print --target codex` prints a copy-paste prompt for Codex.
-- `reportkit skill print --target claude` prints the same guidance tailored for Claude Code.
-- A source copy of the template also lives in `docs/reportkit-simple-skill.md`.
-
-The CLI no longer includes cron management. Scheduling is expected to be handled by your Codex/Claude workflows.
-
-## iOS App States
-
-- signed out: email/password login
-- signed in: token sync status, rescan disabled, sign out
-
-On first launch, the sign-out flow now shows a short onboarding message and a single auth screen with **Sign In** and **Sign Up** mode toggle. Sign up is handled directly with email and password via Supabase. If email confirmation is required, the app shows a confirmation instruction and keeps you in the signed-out flow until you sign in.
-
-## Notes
-
-- The widget uses a new `ReportKitSimpleAttributes` contract and intentionally drops the v1 payload model.
-- `ios/project.yml` is the XcodeGen source. If you regenerate the project, re-check the custom Info.plists.
+See [`/Users/andreas/Desktop/reportkit-simple/docs/open-source-security.md`](/Users/andreas/Desktop/reportkit-simple/docs/open-source-security.md) for details.
