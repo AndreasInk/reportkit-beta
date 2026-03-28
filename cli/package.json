@@ -1,15 +1,32 @@
 {
-  "name": "@reportkit/simple-cli",
+  "name": "@andreasink/reportkit",
   "version": "0.1.0",
   "description": "Minimal ReportKitSimple CLI for login, simple Live Activity sends, and workflow-triggered sending.",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "reportkit": "dist/src/index.js"
   },
+  "files": [
+    "dist/src/**/*",
+    "README.md"
+  ],
   "scripts": {
     "prepare": "npm run build",
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/test/*.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreasInk/reportkit-beta.git",
+    "directory": "cli"
+  },
+  "homepage": "https://github.com/AndreasInk/reportkit-beta/tree/main/cli",
+  "bugs": {
+    "url": "https://github.com/AndreasInk/reportkit-beta/issues"
   },
   "dependencies": {},
   "devDependencies": {

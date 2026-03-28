@@ -36,9 +36,7 @@ You can also place them in `~/.reportkit/.env`.
 ### 2. Install the CLI
 
 ```bash
-cd reportkit-simple/cli
-npm install
-npm run build
+npm install -g @andreasink/reportkit
 ```
 
 ### 3. Sign in on the CLI
@@ -55,6 +53,8 @@ printf '%s\n' 'your-password' | reportkit auth --email you@example.com --passwor
 ```
 
 ### 4. Sign in on the iPhone app
+
+The TestFlight link is on its way.
 
 Open the iOS app and sign in with the same email/password.
 
@@ -92,10 +92,9 @@ reportkit skill print --target claude
 
 ## Where Things Live
 
-- [`ios/`](ios/): iOS app, widget, and Xcode project
+- [`ios/`](ios/): iOS app, widget, Xcode project, and platform-specific notes
 - [`cli/`](cli/): TypeScript CLI package
-- [`supabase/functions/`](supabase/functions/): Supabase edge functions
-- [`supabase/migrations/`](supabase/migrations/): database migrations
+- [`supabase/`](supabase/): edge functions, migrations, and rollout notes
 - [`docs/`](docs/): architecture and security notes
 
 ## Important Notes
