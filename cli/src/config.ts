@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { ReportKitConfig } from "./types.js";
+import { writeSessionSecrets } from "./secureSessionStore.js";
+import type { CliSession, ReportKitConfig } from "./types.js";
 
 const PLACEHOLDER_CONFIG_VALUES = new Map<string, string>([
   ["https://example.supabase.co", "Replace the placeholder Supabase URL with your real project URL."],
@@ -128,8 +129,27 @@ export function readConfig(): ReportKitConfig {
     return defaultConfig();
   }
 
-  const parsed = JSON.parse(fs.readFileSync(configPath(), "utf8")) as Partial<ReportKitConfig>;
-  return mergeConfig(parsed);
+  const parsed = JSON.parse(fs.readFileSync(configPath(), "utf8")) as Partial<ReportKitConfig> & {
+    session?: Partial<CliSession> | null;
+  };
+  const legacySession = readLegacySession(parsed.session);
+  if (legacySession) {
+    writeSessionSecrets({
+      accessToken: legacySession.accessToken,
+      refreshToken: legacySession.refreshToken,
+    });
+    parsed.session = {
+      userID: legacySession.userID,
+      email: legacySession.email,
+      expiresAt: legacySession.expiresAt,
+    };
+  }
+
+  const config = mergeConfig(parsed);
+  if (legacySession) {
+    writeConfig(config);
+  }
+  return config;
 }
 
 export function writeConfig(config: ReportKitConfig): void {
@@ -140,4 +160,28 @@ export function writeConfig(config: ReportKitConfig): void {
 export function ensureConfigDir(): void {
   fs.mkdirSync(configDir(), { recursive: true });
   fs.mkdirSync(logDir(), { recursive: true });
+}
+
+function readLegacySession(session: Partial<CliSession> | null | undefined): CliSession | null {
+  if (!session) {
+    return null;
+  }
+
+  const accessToken = typeof session.accessToken === "string" ? session.accessToken.trim() : "";
+  const refreshToken = typeof session.refreshToken === "string" ? session.refreshToken.trim() : "";
+  const userID = typeof session.userID === "string" ? session.userID.trim() : "";
+  const email = typeof session.email === "string" ? session.email.trim() : "";
+  const expiresAt = typeof session.expiresAt === "string" ? session.expiresAt.trim() : "";
+
+  if (!accessToken || !refreshToken || !userID || !email || !expiresAt) {
+    return null;
+  }
+
+  return {
+    accessToken,
+    refreshToken,
+    userID,
+    email,
+    expiresAt,
+  };
 }

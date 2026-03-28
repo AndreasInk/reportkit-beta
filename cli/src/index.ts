@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   console.log(`ReportKitSimple CLI
 
 Commands:
-  reportkit auth --email EMAIL --password PASSWORD
+  reportkit auth --email EMAIL [--password-stdin]
   reportkit status
   reportkit send --event start|update|end --activity-id ID --title TITLE --summary TEXT [--status good|warning|critical] [--action TEXT] [--deep-link URL]
   reportkit send --file payload.json

@@ -4,10 +4,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
+import { Readable } from "node:stream";
 import { buildSendBody } from "../src/format.js";
-import { statusCommand } from "../src/commands.js";
+import { resolveAuthCredentials, statusCommand } from "../src/commands.js";
 import { configPath, defaultConfig, readConfig, writeConfig } from "../src/config.js";
 import { cliSignIn } from "../src/api.js";
+import { deleteSessionSecrets, loadSessionSecrets, sessionStorePath, writeSessionSecrets } from "../src/secureSessionStore.js";
 
 function withTemporaryConfigFile(run: () => void): void {
   const targetPath = configPath();
@@ -21,6 +23,33 @@ function withTemporaryConfigFile(run: () => void): void {
     } else {
       fs.writeFileSync(targetPath, original, "utf8");
     }
+  }
+}
+
+function withTemporarySessionStore(run: () => void): void {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "reportkit-session-"));
+  const originalStoreFile = process.env.REPORTKIT_SESSION_STORE_FILE;
+  const originalKeychainMock = process.env.REPORTKIT_SESSION_KEYCHAIN_MOCK_FILE;
+
+  process.env.REPORTKIT_SESSION_STORE_FILE = path.join(tempRoot, "session-store.json");
+  process.env.REPORTKIT_SESSION_KEYCHAIN_MOCK_FILE = path.join(tempRoot, "session-keychain.json");
+
+  try {
+    run();
+  } finally {
+    if (originalStoreFile === undefined) {
+      delete process.env.REPORTKIT_SESSION_STORE_FILE;
+    } else {
+      process.env.REPORTKIT_SESSION_STORE_FILE = originalStoreFile;
+    }
+
+    if (originalKeychainMock === undefined) {
+      delete process.env.REPORTKIT_SESSION_KEYCHAIN_MOCK_FILE;
+    } else {
+      process.env.REPORTKIT_SESSION_KEYCHAIN_MOCK_FILE = originalKeychainMock;
+    }
+
+    fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 }
 
@@ -47,65 +76,74 @@ test("buildSendBody uses explicit idempotency key when provided", () => {
 });
 
 test("statusCommand labels expiry as cached local session metadata", () => {
-  withTemporaryConfigFile(() => {
-    writeConfig({
-      supabaseUrl: "https://project-ref.supabase.co",
-      supabaseAnonKey: "sb_publishable_dummy_key",
-      session: {
+  withTemporarySessionStore(() => {
+    withTemporaryConfigFile(() => {
+      writeSessionSecrets({
         accessToken: "access",
         refreshToken: "refresh",
-        userID: "user-123",
-        email: "user@example.com",
-        expiresAt: "2099-01-01T00:00:00.000Z"
+      });
+      writeConfig({
+        supabaseUrl: "https://project-ref.supabase.co",
+        supabaseAnonKey: "sb_publishable_dummy_key",
+        session: {
+          userID: "user-123",
+          email: "user@example.com",
+          expiresAt: "2099-01-01T00:00:00.000Z"
+        }
+      });
+
+      const lines: string[] = [];
+      const originalLog = console.log;
+      console.log = (message?: unknown) => {
+        lines.push(String(message ?? ""));
+      };
+
+      try {
+        statusCommand();
+      } finally {
+        console.log = originalLog;
       }
+
+      assert.match(lines.join("\n"), /Cached session expires at: 2099-01-01T00:00:00.000Z/);
+      assert.match(lines.join("\n"), /Status shows local cached session metadata only\./);
+      assert.match(lines.join("\n"), /Secure session store: /);
+      assert.doesNotMatch(lines.join("\n"), /Token expires at:/);
     });
-
-    const lines: string[] = [];
-    const originalLog = console.log;
-    console.log = (message?: unknown) => {
-      lines.push(String(message ?? ""));
-    };
-
-    try {
-      statusCommand();
-    } finally {
-      console.log = originalLog;
-    }
-
-    assert.match(lines.join("\n"), /Cached session expires at: 2099-01-01T00:00:00.000Z/);
-    assert.match(lines.join("\n"), /Status shows local cached session metadata only\./);
-    assert.doesNotMatch(lines.join("\n"), /Token expires at:/);
   });
 });
 
 test("statusCommand flags expired cached sessions", () => {
-  withTemporaryConfigFile(() => {
-    writeConfig({
-      supabaseUrl: "https://project-ref.supabase.co",
-      supabaseAnonKey: "sb_publishable_dummy_key",
-      session: {
+  withTemporarySessionStore(() => {
+    withTemporaryConfigFile(() => {
+      writeSessionSecrets({
         accessToken: "access",
         refreshToken: "refresh",
-        userID: "user-123",
-        email: "user@example.com",
-        expiresAt: "2000-01-01T00:00:00.000Z"
+      });
+      writeConfig({
+        supabaseUrl: "https://project-ref.supabase.co",
+        supabaseAnonKey: "sb_publishable_dummy_key",
+        session: {
+          userID: "user-123",
+          email: "user@example.com",
+          expiresAt: "2000-01-01T00:00:00.000Z"
+        }
+      });
+
+      const lines: string[] = [];
+      const originalLog = console.log;
+      console.log = (message?: unknown) => {
+        lines.push(String(message ?? ""));
+      };
+
+      try {
+        statusCommand();
+      } finally {
+        console.log = originalLog;
       }
+
+      assert.match(lines.join("\n"), /Cached session expired at: 2000-01-01T00:00:00.000Z/);
+      assert.match(lines.join("\n"), /next authenticated request will try to refresh it/);
     });
-
-    const lines: string[] = [];
-    const originalLog = console.log;
-    console.log = (message?: unknown) => {
-      lines.push(String(message ?? ""));
-    };
-
-    try {
-      statusCommand();
-    } finally {
-      console.log = originalLog;
-    }
-
-    assert.match(lines.join("\n"), /Cached session expired at: 2000-01-01T00:00:00.000Z/);
-    assert.match(lines.join("\n"), /next authenticated request will try to refresh it/);
   });
 });
 
@@ -191,7 +229,7 @@ test("defaultConfig reads machine-global ReportKit env before local config", () 
   }
 });
 
-test("readConfig ignores stored Supabase values and keeps stored session", () => {
+test("readConfig ignores stored Supabase values and keeps stored session metadata", () => {
   const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "reportkit-home-"));
   const runtimeDir = path.join(tempHome, ".reportkit");
   const configDir = path.join(tempHome, ".config", "reportkit-simple");
@@ -213,8 +251,6 @@ test("readConfig ignores stored Supabase values and keeps stored session", () =>
       supabaseUrl: "https://stale-config.supabase.co",
       supabaseAnonKey: "stale-config-anon-key",
       session: {
-        accessToken: "access",
-        refreshToken: "refresh",
         userID: "user-123",
         email: "user@example.com",
         expiresAt: "2099-01-01T00:00:00.000Z"
@@ -265,6 +301,115 @@ test("readConfig ignores stored Supabase values and keeps stored session", () =>
 
     fs.rmSync(tempHome, { recursive: true, force: true });
   }
+});
+
+test("readConfig migrates legacy plaintext session secrets into the secure store", () => {
+  withTemporarySessionStore(() => {
+    const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "reportkit-home-"));
+    const runtimeDir = path.join(tempHome, ".reportkit");
+    const localConfigDir = path.join(tempHome, ".config", "reportkit-simple");
+    fs.mkdirSync(runtimeDir, { recursive: true });
+    fs.mkdirSync(localConfigDir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(runtimeDir, ".env"),
+      [
+        "REPORTKIT_SUPABASE_URL=https://machine-global.supabase.co",
+        "REPORTKIT_SUPABASE_ANON_KEY=sb_publishable_global_token"
+      ].join("\n"),
+      "utf8"
+    );
+
+    fs.writeFileSync(
+      path.join(localConfigDir, "config.json"),
+      JSON.stringify({
+        session: {
+          accessToken: "legacy-access",
+          refreshToken: "legacy-refresh",
+          userID: "user-123",
+          email: "user@example.com",
+          expiresAt: "2099-01-01T00:00:00.000Z"
+        }
+      }),
+      "utf8"
+    );
+
+    const originalHome = process.env.HOME;
+    const originalRuntimeDir = process.env.REPORTKIT_RUNTIME_DIR;
+    delete process.env.REPORTKIT_RUNTIME_DIR;
+    process.env.HOME = tempHome;
+
+    try {
+      const config = readConfig();
+      const secureSession = loadSessionSecrets();
+      const rawConfig = JSON.parse(fs.readFileSync(path.join(localConfigDir, "config.json"), "utf8")) as {
+        session?: Record<string, unknown>;
+      };
+
+      assert.equal(config.session?.email, "user@example.com");
+      assert.deepEqual(secureSession, {
+        accessToken: "legacy-access",
+        refreshToken: "legacy-refresh",
+      });
+      assert.deepEqual(rawConfig.session, {
+        userID: "user-123",
+        email: "user@example.com",
+        expiresAt: "2099-01-01T00:00:00.000Z"
+      });
+    } finally {
+      if (originalHome === undefined) {
+        delete process.env.HOME;
+      } else {
+        process.env.HOME = originalHome;
+      }
+
+      if (originalRuntimeDir === undefined) {
+        delete process.env.REPORTKIT_RUNTIME_DIR;
+      } else {
+        process.env.REPORTKIT_RUNTIME_DIR = originalRuntimeDir;
+      }
+
+      fs.rmSync(tempHome, { recursive: true, force: true });
+      deleteSessionSecrets();
+    }
+  });
+});
+
+test("secure session store writes canonical file with local-only permissions", () => {
+  withTemporarySessionStore(() => {
+    writeSessionSecrets({
+      accessToken: "access",
+      refreshToken: "refresh",
+    });
+
+    const stats = fs.statSync(sessionStorePath());
+    assert.equal(stats.mode & 0o777, 0o600);
+  });
+});
+
+test("resolveAuthCredentials rejects insecure password inputs", async () => {
+  await assert.rejects(
+    () => resolveAuthCredentials(new Map([["password", "secret"]]), {}),
+    /`--password` is not supported/,
+  );
+
+  await assert.rejects(
+    () => resolveAuthCredentials(new Map(), { REPORTKIT_EMAIL: "user@example.com", REPORTKIT_PASSWORD: "secret" }),
+    /`REPORTKIT_PASSWORD` is not supported/,
+  );
+});
+
+test("resolveAuthCredentials reads password from stdin when requested", async () => {
+  const credentials = await resolveAuthCredentials(
+    new Map<string, string | true>([["email", "user@example.com"], ["password-stdin", true]]),
+    {},
+    Readable.from(["s3cr3t\n"]),
+  );
+
+  assert.deepEqual(credentials, {
+    email: "user@example.com",
+    password: "s3cr3t",
+  });
 });
 
 test("cliSignIn includes request URL and cause for fetch errors", async () => {

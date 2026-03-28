@@ -21,9 +21,11 @@ ReportKit Simple is a minimal parallel implementation focused only on:
 
 ### CLI
 
-- Auths once with Supabase: `reportkit auth --email ... --password ...`.
-- Persists access token, refresh token, user email, and expiry to `~/.config/reportkit-simple/config.json`.
-- Sends with `reportkit send` using that stored token.
+- Auths once with Supabase: `reportkit auth --email ...`.
+- Reads the password either from a hidden interactive prompt or `--password-stdin`.
+- Persists session metadata to `~/.config/reportkit-simple/config.json`.
+- Persists access/refresh tokens separately in `~/.config/reportkit-simple/session-store.json` with `0600` permissions and mirrors them to macOS Keychain as best-effort backup.
+- Sends with `reportkit send` using that stored session.
 
 ### Supabase additions
 
@@ -35,6 +37,7 @@ ReportKit Simple is a minimal parallel implementation focused only on:
 
 - CLI and app both use normal Supabase auth.
 - Authorization for token upload and send routes is via the same Supabase bearer token header.
+- CLI secrets are intentionally kept out of `config.json` and out of process arguments.
 - `reportkit-send-live-activity` receives the v2 attributes payload and start-event attribute contract:
  - `generatedAt`
  - `title`

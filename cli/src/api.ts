@@ -5,6 +5,7 @@ import type {
   SendRequestBody
 } from "./types.js";
 import { writeConfig } from "./config.js";
+import { loadSessionSecrets, writeSessionSecrets } from "./secureSessionStore.js";
 
 interface RequestOptions {
   method?: "GET" | "POST";
@@ -94,15 +95,39 @@ async function requestJSON<T>(
   options.session.accessToken = refreshed.access_token;
   options.session.refreshToken = refreshed.refresh_token;
   options.session.expiresAt = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
-  writeSession(config, options.session);
+  writePersistedSession(config, options.session);
 
   return withToken(options.session.accessToken);
 }
 
-function writeSession(config: ReportKitConfig, session: ReportKitConfig["session"]): void {
+function writePersistedSession(config: ReportKitConfig, session: CliSession | null): void {
   if (!session) return;
-  config.session = session;
+  config.session = {
+    userID: session.userID,
+    email: session.email,
+    expiresAt: session.expiresAt,
+  };
+  writeSessionSecrets({
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+  });
   writeConfig(config);
+}
+
+function persistedSession(config: ReportKitConfig): CliSession {
+  if (!config.session) {
+    throw new Error("No CLI session metadata found. Run `reportkit auth --email ...` first.");
+  }
+
+  const secrets = loadSessionSecrets();
+  if (!secrets) {
+    throw new Error("Stored CLI session secrets are unavailable. Run `reportkit auth --email ...` again.");
+  }
+
+  return {
+    ...config.session,
+    ...secrets,
+  };
 }
 
 function urlFor(functionName: string, supabaseUrl: string): string {
@@ -110,9 +135,7 @@ function urlFor(functionName: string, supabaseUrl: string): string {
 }
 
 async function refreshSession(config: ReportKitConfig): Promise<CliLoginResponse> {
-  if (!config.session?.refreshToken) {
-    throw new Error("Missing refresh token.");
-  }
+  const session = persistedSession(config);
 
   const url = new URL("/auth/v1/token", config.supabaseUrl);
   url.searchParams.set("grant_type", "refresh_token");
@@ -124,7 +147,7 @@ async function refreshSession(config: ReportKitConfig): Promise<CliLoginResponse
       apikey: config.supabaseAnonKey
     },
     body: JSON.stringify({
-      refresh_token: config.session.refreshToken
+      refresh_token: session.refreshToken
     })
   }, "auth refresh");
 }
@@ -156,6 +179,10 @@ export function sendLiveActivity(
 ): Promise<Record<string, unknown>> {
   return requestJSON<Record<string, unknown>>(config, "reportkit-send-live-activity", {
     body,
-    session: config.session
+    session: persistedSession(config)
   });
+}
+
+export function persistSessionSecrets(secrets: { accessToken: string; refreshToken: string }): void {
+  writeSessionSecrets(secrets);
 }

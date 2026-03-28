@@ -1,6 +1,15 @@
 .DS_Store
+.env
+.env.*
+!.env.example
 node_modules/
 dist/
 /ios/.build
 /ios/build
+*.ipa
+*.xcarchive
+*.xcresult
+*.mobileprovision
+**/xcuserdata/
+**/*.xcuserstate
 .codex/environments/environment.toml

@@ -7,6 +7,8 @@ import UserNotifications
 final class ReportKitSimplePushTokenRegistrar {
     static let shared = ReportKitSimplePushTokenRegistrar()
 
+    // These APNs token values are cached only to retry uploads and to reflect local status in the UI.
+    // They are not treated as long-lived auth secrets.
     private enum Keys {
         static let pushToken = "reportkit.simple.pushToStartToken"
         static let deviceToken = "reportkit.simple.deviceToken"

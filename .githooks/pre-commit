@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ALLOW_MARKER="reportkit:allow-secret"
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  exit 0
+fi
+
+staged_paths() {
+  git diff --cached --name-only --diff-filter=ACMR
+}
+
+staged_diff() {
+  if [[ -n "${REPORTKIT_GITHOOK_DIFF_FILE:-}" ]]; then
+    cat "${REPORTKIT_GITHOOK_DIFF_FILE}"
+    return
+  fi
+
+  git diff --cached --unified=0 --no-color -- . \
+    ':(exclude).githooks/pre-commit' \
+    ':(exclude)README.md' \
+    ':(exclude)SECURITY.md' \
+    ':(exclude)SUPPORT.md' \
+    ':(exclude)docs/**' \
+    ':(exclude)cli/package-lock.json' \
+    ':(exclude)ios/ReportKitSimple.xcodeproj/project.xcworkspace/xcuserdata/**'
+}
+
+added_lines() {
+  staged_diff | grep '^+' | grep -vE '^\+\+\+' || true
+}
+
+print_matches() {
+  local label="$1"
+  local regex="$2"
+  local matches
+  matches="$(added_lines | grep -nE -- "${regex}" | grep -v "${ALLOW_MARKER}" || true)"
+
+  if [[ -z "${matches}" ]]; then
+    return
+  fi
+
+  printf '\n[%s]\n%s\n' "${label}" "${matches}"
+  FOUND=1
+}
+
+print_path_matches() {
+  local label="$1"
+  local regex="$2"
+  local matches
+  matches="$(staged_paths | grep -E -- "${regex}" || true)"
+
+  if [[ -z "${matches}" ]]; then
+    return
+  fi
+
+  printf '\n[%s]\n%s\n' "${label}" "${matches}"
+  FOUND=1
+}
+
+FOUND=0
+
+print_path_matches \
+  "Blocked staged file paths" \
+  '(^|/)\.env($|\..+)|(^|/)(session-store\.json|device-state\.json)$|\.mobileprovision$|\.p12$'
+
+print_matches \
+  "Private keys or certificates" \
+  '-----BEGIN ([A-Z0-9 ]+ )?PRIVATE KEY-----|-----BEGIN CERTIFICATE-----'
+
+print_matches \
+  "Known high-signal secret formats" \
+  'ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_-]{20,}|xox[baprs]-[A-Za-z0-9-]{20,}|sb_secret_[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9_-]{20,}'
+
+print_matches \
+  "Credential assignments or auth headers" \
+  'SUPABASE_SERVICE_ROLE|REPORTKIT_PASSWORD[[:space:]]*=[^=]|Authorization:[[:space:]]*Bearer[[:space:]]+[A-Za-z0-9._-]{16,}|authorization:[[:space:]]*["'\'']?Bearer[[:space:]]+[A-Za-z0-9._-]{16,}'
+
+if [[ "${FOUND}" -eq 0 ]]; then
+  exit 0
+fi
+
+cat <<'EOF'
+
+pre-commit blocked staged content that looks like a hardcoded credential or secret-bearing file.
+
+If the match is intentional and non-sensitive, add `reportkit:allow-secret` on the same added line.
+Otherwise:
+1. remove the secret from the staged change
+2. move it to local config, Keychain, or CI secrets
+3. re-stage and commit again
+EOF
+
+exit 1

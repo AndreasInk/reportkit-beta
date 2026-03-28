@@ -19,14 +19,15 @@ This lives beside the existing ReportKit implementation. It does not replace the
 
 1. User installs the npm package.
 2. User runs `reportkit auth`.
-3. CLI stores an email/password-based Supabase session in local config.
+3. CLI stores session metadata in local config and keeps the bearer tokens in a separate local-only session store.
 4. User signs into the iOS app with the same account.
 5. `reportkit send` reuses the local Supabase access token to publish Live Activity updates.
 
 ## Runtime Boundaries
 
 - iOS keeps normal Supabase auth.
-- CLI stores the Supabase access/refresh tokens in the user config directory.
+- CLI stores session metadata in `~/.config/reportkit-simple/config.json`.
+- CLI stores access/refresh tokens in `~/.config/reportkit-simple/session-store.json` with `0600` permissions and mirrors them to macOS Keychain as best-effort backup.
 - Existing token upload and live-activity send endpoints are reused.
 - No pairing API is required.
 
@@ -40,7 +41,9 @@ npm run build
 export REPORTKIT_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 export REPORTKIT_SUPABASE_ANON_KEY=YOUR_ANON_PUBLIC_KEY
 
-reportkit auth
+reportkit auth --email you@example.com
+# or for automation:
+printf '%s\n' 'your-password' | reportkit auth --email you@example.com --password-stdin
 reportkit status
 reportkit send --event update --activity-id daily-report --title "Revenue watch" --summary "Down 8% vs yesterday" --status warning
 reportkit logout
@@ -56,9 +59,40 @@ The CLI requires both `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY`
   1. process environment
   2. machine-global `~/.reportkit/.env`
 - Placeholder values are rejected up front with a clear error.
-- `~/.config/reportkit-simple/config.json` stores CLI session state only. It is not used as a backup source for Supabase URL/key.
+- `~/.config/reportkit-simple/config.json` stores CLI session metadata only. It does not contain access or refresh tokens.
+- `~/.config/reportkit-simple/session-store.json` stores the bearer tokens with local-only permissions and is mirrored to macOS Keychain as best-effort backup.
 
 The iOS app reads the same keys from `Info.plist` (`REPORTKIT_SUPABASE_URL`, `REPORTKIT_SUPABASE_ANON_KEY`) and will precondition-fail at launch if unresolved.
+
+## Public Repo Notes
+
+This source checkout is intended to stay safe to open source.
+
+The repo does not include:
+
+- Supabase service-role keys
+- APNs credentials
+- Apple signing assets
+- private release overrides
+- future relay or push-service secrets
+
+More detail lives in [`docs/open-source-security.md`](docs/open-source-security.md).
+
+## Local Git Hook
+
+To block obvious hardcoded credentials before commit:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
+That installs `.githooks/pre-commit` as the repo hook path and rejects staged:
+
+- `.env` files and local session stores
+- private keys and certificates
+- high-signal token formats
+- `reportkit auth ... --password ...` usage
+- direct `REPORTKIT_PASSWORD=` assignments
 
 ### Skill
 

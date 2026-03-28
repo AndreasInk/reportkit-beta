@@ -1,8 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import { cliSignIn, sendLiveActivity } from "./api.js";
+import { cliSignIn, persistSessionSecrets, sendLiveActivity } from "./api.js";
 import { configPath, readConfig, writeConfig } from "./config.js";
 import { buildSendBody, normalizeApnsEnv, normalizeStatus, normalizeVisualStyle, optionalFlag, parseArgs, requiredFlag } from "./format.js";
+import { promptForPassword, readPasswordFromStdin } from "./password.js";
+import { deleteSessionSecrets, loadSessionSecrets, sessionStorePath } from "./secureSessionStore.js";
 import type { ReportKitConfig } from "./types.js";
 
 function describeSessionExpiry(expiresAt: string, now: Date = new Date()): string[] {
@@ -10,14 +12,14 @@ function describeSessionExpiry(expiresAt: string, now: Date = new Date()): strin
   if (Number.isNaN(expiry.getTime())) {
     return [
       `Cached session expires at: ${expiresAt}`,
-      "Cached session state is invalid. Run `reportkit auth --email ... --password ...`."
+      "Cached session state is invalid. Run `reportkit auth --email ...`."
     ];
   }
 
   if (expiry <= now) {
     return [
       `Cached session expired at: ${expiresAt}`,
-      "Status shows local cached session metadata only. The next authenticated request will try to refresh it, or run `reportkit auth --email ... --password ...`."
+      "Status shows local cached session metadata only. The next authenticated request will try to refresh it, or run `reportkit auth --email ...`."
     ];
   }
 
@@ -27,34 +29,54 @@ function describeSessionExpiry(expiresAt: string, now: Date = new Date()): strin
   ];
 }
 
-function readAuthFlags(flags: Map<string, string | true>): { email: string; password: string } {
-  const email = optionalFlag(flags, "email") ?? process.env.REPORTKIT_EMAIL;
-  const password = optionalFlag(flags, "password") ?? process.env.REPORTKIT_PASSWORD;
-  if (!email || !password) {
-    throw new Error("Usage: reportkit auth --email EMAIL --password PASSWORD");
+export async function resolveAuthCredentials(
+  flags: Map<string, string | true>,
+  env: NodeJS.ProcessEnv = process.env,
+  stdin: NodeJS.ReadableStream = process.stdin,
+): Promise<{ email: string; password: string }> {
+  if (flags.has("password")) {
+    throw new Error("`--password` is not supported. Use the interactive prompt or `--password-stdin`.");
   }
+  if (typeof env.REPORTKIT_PASSWORD === "string" && env.REPORTKIT_PASSWORD.trim() !== "") {
+    throw new Error("`REPORTKIT_PASSWORD` is not supported. Use the interactive prompt or `--password-stdin`.");
+  }
+
+  const email = optionalFlag(flags, "email") ?? env.REPORTKIT_EMAIL;
+  if (!email) {
+    throw new Error("Usage: reportkit auth --email EMAIL [--password-stdin]");
+  }
+
+  const password = flags.has("password-stdin")
+    ? await readPasswordFromStdin(stdin)
+    : await promptForPassword();
+
   return { email, password };
 }
 
 function requireSession(config: ReportKitConfig): void {
   if (!config.session) {
-    throw new Error("No CLI credentials found. Run `reportkit auth --email ... --password ...` first.");
+    throw new Error("No CLI credentials found. Run `reportkit auth --email ...` first.");
+  }
+  if (!loadSessionSecrets()) {
+    throw new Error("Stored CLI session secrets are unavailable. Run `reportkit auth --email ...` again.");
   }
 }
 
 export async function authCommand(argv: string[]): Promise<void> {
   const config = readConfig();
   const flags = parseArgs(argv);
-  const credentials = readAuthFlags(flags);
+  const credentials = await resolveAuthCredentials(flags);
 
   const login = await cliSignIn(config, credentials.email, credentials.password);
   config.session = {
-    accessToken: login.access_token,
-    refreshToken: login.refresh_token,
     userID: login.user.id,
     email: login.user.email,
     expiresAt: new Date(Date.now() + login.expires_in * 1000).toISOString()
   };
+  persistSessionSecrets({
+    accessToken: login.access_token,
+    refreshToken: login.refresh_token,
+  });
   writeConfig(config);
   console.log(`Signed in as ${config.session.email}.`);
 }
@@ -62,7 +84,7 @@ export async function authCommand(argv: string[]): Promise<void> {
 export function statusCommand(): void {
   const config = readConfig();
   if (!config.session) {
-    console.log("Not signed in. Run `reportkit auth --email ... --password ...`.");
+    console.log("Not signed in. Run `reportkit auth --email ...`.");
     return;
   }
 
@@ -72,6 +94,7 @@ export function statusCommand(): void {
     console.log(line);
   }
   console.log(`Config: ${configPath()}`);
+  console.log(`Secure session store: ${sessionStorePath()}`);
 }
 
 export async function sendCommand(argv: string[]): Promise<void> {
@@ -136,7 +159,7 @@ Keep guidance short, practical, and paste-ready.
 
 Use this exact setup flow:
 - iOS login: email + password with the same account.
-- CLI login: reportkit auth --email <email> --password <password>.
+- CLI login: reportkit auth --email <email>.
 - Confirm both are signed in.
 
 Ask these onboarding questions, in order:
@@ -172,6 +195,7 @@ export async function logoutCommand(): Promise<void> {
   const config = readConfig();
   config.session = null;
   writeConfig(config);
+  deleteSessionSecrets();
   console.log("Signed out.");
 }
 

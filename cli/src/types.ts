@@ -3,13 +3,18 @@ export type LiveActivityEvent = "start" | "update" | "end";
 export type Status = "good" | "warning" | "critical";
 export type VisualStyle = "minimal" | "banner" | "chart";
 
-export interface CliSession {
-  accessToken: string;
-  refreshToken: string;
+export interface CliSessionMetadata {
   userID: string;
   email: string;
   expiresAt: string;
 }
+
+export interface CliSessionSecrets {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface CliSession extends CliSessionMetadata, CliSessionSecrets {}
 
 export interface CliLoginResponse {
   access_token: string;
@@ -25,7 +30,7 @@ export interface CliLoginResponse {
 export interface ReportKitConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
-  session: CliSession | null;
+  session: CliSessionMetadata | null;
 }
 
 export interface SendRequestBody {
