@@ -1,8 +1,8 @@
-# ReportKit Simple v2 Architecture
+# ReportKit Beta Architecture
 
 ## Intent
 
-ReportKit Simple is a minimal parallel implementation focused only on:
+ReportKit Beta is a minimal parallel implementation focused only on:
 
 - Supabase email/password login on both CLI and iOS.
 - Device token upload via existing `reportkit-token` and `reportkit-device-token` endpoints.

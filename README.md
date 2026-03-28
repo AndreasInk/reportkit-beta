@@ -1,4 +1,4 @@
-# ReportKit Simple v2
+# ReportKit Beta
 
 ![ReportKit README bento](docs/assets/reportkit-readme-bento.png)
 
@@ -9,7 +9,7 @@ Minimal parallel implementation of ReportKit focused on one job:
 - send simple Live Activity updates
 - schedule reports through your Codex/Claude workflow
 
-This lives beside the existing ReportKit implementation. It does not replace the current root yet.
+This is the current beta implementation of ReportKit. It lives beside the existing implementation and does not replace the current root yet.
 
 ## Structure
 

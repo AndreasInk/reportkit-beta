@@ -1,7 +1,7 @@
-# ReportKitSimple Agent Skill
+# ReportKit Beta Agent Skill
 
 ## Scope
-- Help a user set up ReportKitSimple with shared Supabase auth.
+- Help a user set up ReportKit Beta with shared Supabase auth.
 - Help define when to send Live Activity updates.
 - Do **not** configure cron in this project. Scheduling belongs to Codex/Claude workflows.
 
