@@ -9,11 +9,10 @@ packages:
     from: 2.41.1
 settings:
   base:
-    PRODUCT_BUNDLE_IDENTIFIER: com.ai.ReportKitSimple
+    PRODUCT_BUNDLE_IDENTIFIER: com.ai.ReportKit
     MARKETING_VERSION: 1.0
     CURRENT_PROJECT_VERSION: 1
     SWIFT_VERSION: 6.0
-    DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
     IPHONEOS_DEPLOYMENT_TARGET: 17.2
     TARGETED_DEVICE_FAMILY: "1"
@@ -33,13 +32,23 @@ targets:
       - path: App/Resources
     info:
       path: App/Resources/Info.plist
+      properties:
+        NSSupportsLiveActivities: true
+        UIBackgroundModes:
+          - remote-notification
+        UILaunchScreen: {}
+        REPORTKIT_APNS_ENV: sandbox
+        REPORTKIT_SUPABASE_ANON_KEY: $(REPORTKIT_SUPABASE_ANON_KEY)
+        REPORTKIT_SUPABASE_URL: $(REPORTKIT_SUPABASE_URL)
     settings:
       base:
         GENERATE_INFOPLIST_FILE: NO
-        PRODUCT_NAME: ReportKitSimple
+        PRODUCT_NAME: ReportKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.ai.ReportKit
+        CODE_SIGN_ENTITLEMENTS: ReportKitSimple.entitlements
         INFOPLIST_FILE: App/Resources/Info.plist
-        REPORTKIT_SUPABASE_ANON_KEY: "$(REPORTKIT_SUPABASE_ANON_KEY)"
-        REPORTKIT_SUPABASE_URL: "$(REPORTKIT_SUPABASE_URL)"
+        REPORTKIT_SUPABASE_ANON_KEY: $(REPORTKIT_SUPABASE_ANON_KEY)
+        REPORTKIT_SUPABASE_URL: $(REPORTKIT_SUPABASE_URL)
     dependencies:
       - package: Supabase
       - target: ReportKitSimpleWidgetExtension
@@ -57,7 +66,8 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: NO
         PRODUCT_NAME: ReportKitSimpleWidgetExtension
-        PRODUCT_BUNDLE_IDENTIFIER: com.ai.ReportKitSimple.widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.ai.ReportKit.widget
+        CODE_SIGN_ENTITLEMENTS: ReportKitSimpleWidgetExtension.entitlements
         INFOPLIST_FILE: Widget/Resources/Info.plist
         SKIP_INSTALL: YES
   ReportKitSimpleTests:

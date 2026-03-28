@@ -93,8 +93,8 @@ actor ReportKitSimpleSupabaseAuth: ReportKitSimpleAuthenticating {
         }
 
         let client = SupabaseClient(
-            supabaseURL: ReportKitSimpleConfig.supabaseURL,
-            supabaseKey: ReportKitSimpleConfig.supabaseAnonKey
+            supabaseURL: try ReportKitSimpleConfig.supabaseURL,
+            supabaseKey: try ReportKitSimpleConfig.supabaseAnonKey
         )
         cachedClient = client
         return client

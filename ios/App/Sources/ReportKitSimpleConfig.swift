@@ -1,8 +1,36 @@
 import Foundation
 
+enum ReportKitSimpleConfigError: LocalizedError, Equatable {
+    case missingOrUnresolvedKey(String)
+    case invalidURL(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .missingOrUnresolvedKey(let key):
+            return "Missing or unresolved configuration key: \(key)."
+        case .invalidURL(let key):
+            return "Invalid URL in configuration key: \(key)."
+        }
+    }
+}
+
 enum ReportKitSimpleConfig {
-    private static func requiredInfoValue(_ key: String) -> String {
-        if let envValue = ProcessInfo.processInfo.environment[key] {
+    struct Source {
+        let environment: [String: String]
+        let infoDictionary: [String: Any]
+        let isRunningTests: Bool
+
+        static var live: Source {
+            Source(
+                environment: ProcessInfo.processInfo.environment,
+                infoDictionary: Bundle.main.infoDictionary ?? [:],
+                isRunningTests: ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            )
+        }
+    }
+
+    static func requiredValue(_ key: String, source: Source = .live) throws -> String {
+        if let envValue = source.environment[key] {
             let trimmed = envValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty, !trimmed.contains("$(") {
                 return trimmed
@@ -10,11 +38,11 @@ enum ReportKitSimpleConfig {
         }
 
         guard
-            let raw = Bundle.main.object(forInfoDictionaryKey: key) as? String,
+            let raw = source.infoDictionary[key] as? String,
             !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
             !raw.contains("$(")
         else {
-            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            if source.isRunningTests {
                 switch key {
                 case "REPORTKIT_SUPABASE_URL":
                     return "https://example.supabase.co"
@@ -24,21 +52,25 @@ enum ReportKitSimpleConfig {
                     break
                 }
             }
-            preconditionFailure("Missing or unresolved config key: \(key)")
+            throw ReportKitSimpleConfigError.missingOrUnresolvedKey(key)
         }
 
         return raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     static var supabaseURL: URL {
-        guard let url = URL(string: requiredInfoValue("REPORTKIT_SUPABASE_URL")) else {
-            preconditionFailure("Invalid URL for REPORTKIT_SUPABASE_URL")
+        get throws {
+            guard let url = URL(string: try requiredValue("REPORTKIT_SUPABASE_URL")) else {
+                throw ReportKitSimpleConfigError.invalidURL("REPORTKIT_SUPABASE_URL")
+            }
+            return url
         }
-        return url
     }
 
     static var supabaseAnonKey: String {
-        return requiredInfoValue("REPORTKIT_SUPABASE_ANON_KEY")
+        get throws {
+            try requiredValue("REPORTKIT_SUPABASE_ANON_KEY")
+        }
     }
 
     static var apnsEnv: String {

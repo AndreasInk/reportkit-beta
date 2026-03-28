@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -19,9 +19,12 @@
 		722E4653C57774AB3D216640 /* ReportKitSimpleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD749A78D26EEC5AC3DD743 /* ReportKitSimpleViews.swift */; };
 		73E531B656512F31B5226750 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0A63C553583F764CA41E4493 /* Supabase */; };
 		77DF68BFA21678B7DE59B140 /* ReportKitSimplePushTokenRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79ED2A8184166DEE1A1BB9C /* ReportKitSimplePushTokenRegistrar.swift */; };
+		86A777843C9BD4A0F2A8BC76 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */; };
+		89942A888696D02E2E4FFD91 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */; };
 		AAFD3A1DA4A76D5111A5D9ED /* ReportKitSimpleAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9252F62799C447AE957B3362 /* ReportKitSimpleAttributes.swift */; };
 		B590C8CDE26AC8537B86664E /* ReportKitSimpleTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5FFB56C7F25343EBB74CF0 /* ReportKitSimpleTypes.swift */; };
 		B879C5288F1986A770264077 /* ReportKitSimpleConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C242218296A5AF05FF43DE3 /* ReportKitSimpleConfig.swift */; };
+		D7C999F5301D97FA382FD77E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */; };
 		DA48DF291610741289F4E040 /* ReportKitSimpleAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE852AA447203DCD2A20A2E3 /* ReportKitSimpleAppDelegate.swift */; };
 		EB5D8D94471B7A2DF65EF3FE /* ReportKitSimpleAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9252F62799C447AE957B3362 /* ReportKitSimpleAttributes.swift */; };
 		F6852324D7DAE6F011D7383A /* ReportKitSimpleAppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 199A5BF756257238BEDB372B /* ReportKitSimpleAppModel.swift */; };
@@ -73,17 +76,15 @@
 		29EA560D0336ED80C5C2DA9E /* ReportKitSimpleWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleWidgetBundle.swift; sourceTree = "<group>"; };
 		34BDE6255C2C5C0E2DA4C24A /* ReportKitSimpleTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ReportKitSimpleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A5FFB56C7F25343EBB74CF0 /* ReportKitSimpleTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleTypes.swift; sourceTree = "<group>"; };
-		3C4841D72807B24CE5C19941 /* ReportKitSimpleWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ReportKitSimpleWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C4841D72807B24CE5C19941 /* ReportKitSimpleWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ReportKitSimpleWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B42C452BF484B9B2B22E9A1 /* ReportKitSimpleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleUITests.swift; sourceTree = "<group>"; };
-		6E73F1CBD982F917A1A08A52 /* ReportKitSimple.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReportKitSimple.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E73F1CBD982F917A1A08A52 /* ReportKitSimple.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ReportKitSimple.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FD749A78D26EEC5AC3DD743 /* ReportKitSimpleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleViews.swift; sourceTree = "<group>"; };
 		9252F62799C447AE957B3362 /* ReportKitSimpleAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleAttributes.swift; sourceTree = "<group>"; };
 		BBFEA61C0E51E674C80F10CE /* ReportKitSimpleUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ReportKitSimpleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C48646C63700F8B64A6DF55F /* ReportKitSimpleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleApp.swift; sourceTree = "<group>"; };
 		D79ED2A8184166DEE1A1BB9C /* ReportKitSimplePushTokenRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimplePushTokenRegistrar.swift; sourceTree = "<group>"; };
-		E18D0A0C2F6F85490036402D /* ReportKitSimple.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ReportKitSimple.entitlements; sourceTree = "<group>"; };
-		E18D0A0D2F6F87710036402D /* ReportKitSimpleWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ReportKitSimpleWidgetExtension.entitlements; sourceTree = "<group>"; };
-		E18D0A662F6FBDBF0036402D /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
 		E43F8A262B8DCCC3328E49B8 /* ReportKitSimpleStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleStorage.swift; sourceTree = "<group>"; };
 		EE852AA447203DCD2A20A2E3 /* ReportKitSimpleAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleAppDelegate.swift; sourceTree = "<group>"; };
 		F4DFE095C264C6F7AB8197C2 /* ReportKitSimpleSupabaseAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleSupabaseAuth.swift; sourceTree = "<group>"; };
@@ -112,6 +113,7 @@
 		1D5F9297DD0A8241E46E49FF /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */,
 				9252F62799C447AE957B3362 /* ReportKitSimpleAttributes.swift */,
 			);
 			path = Shared;
@@ -146,7 +148,6 @@
 			isa = PBXGroup;
 			children = (
 				4B59F69CC288F71424CCA3C0 /* Sources */,
-				E18D0A662F6FBDBF0036402D /* Media.xcassets */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -154,8 +155,6 @@
 		9D5767B863032FDB017D6C4A = {
 			isa = PBXGroup;
 			children = (
-				E18D0A0D2F6F87710036402D /* ReportKitSimpleWidgetExtension.entitlements */,
-				E18D0A0C2F6F85490036402D /* ReportKitSimple.entitlements */,
 				4CD14E4EB6466C441EE9C371 /* App */,
 				DC608B14B6B006BEF7E2CCD8 /* ReportKitSimpleTests */,
 				C4DDF04215208CB10B509963 /* ReportKitSimpleUITests */,
@@ -200,6 +199,7 @@
 			buildConfigurationList = FD0101F489D530728A6179FC /* Build configuration list for PBXNativeTarget "ReportKitSimpleWidgetExtension" */;
 			buildPhases = (
 				859619A118DADBE99D5DFC2A /* Sources */,
+				652CDE3CEC830D3735520EFA /* Resources */,
 			);
 			buildRules = (
 			);
@@ -217,6 +217,7 @@
 			buildConfigurationList = 4546AE80B03A54572A744077 /* Build configuration list for PBXNativeTarget "ReportKitSimpleTests" */;
 			buildPhases = (
 				087C501BE7049A3092E28A8A /* Sources */,
+				313F6FCB5F83766C5CE63CB9 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -253,6 +254,7 @@
 			buildConfigurationList = F22E50270A1EF8DF00963D48 /* Build configuration list for PBXNativeTarget "ReportKitSimple" */;
 			buildPhases = (
 				AA9CFAD98EED3876F4B8D0D8 /* Sources */,
+				3D8E8653317F634A9DA0E30E /* Resources */,
 				7CCDF09E1AD2D9EB1D78F419 /* Frameworks */,
 				09F75F97D4BC28506D17FF53 /* Embed Foundation Extensions */,
 			);
@@ -282,11 +284,9 @@
 						ProvisioningStyle = Automatic;
 					};
 					2259C88ECEB00DB4A39E77FC = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					AEC618F69BD8D9A52F37FED2 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 						TestTargetID = D280FAB17CD42EC54EF7622A;
 					};
@@ -308,6 +308,7 @@
 			packageReferences = (
 				82A62E3FFA985B96786C9714 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -318,6 +319,33 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		313F6FCB5F83766C5CE63CB9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D7C999F5301D97FA382FD77E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D8E8653317F634A9DA0E30E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86A777843C9BD4A0F2A8BC76 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		652CDE3CEC830D3735520EFA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				89942A888696D02E2E4FFD91 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		087C501BE7049A3092E28A8A /* Sources */ = {
@@ -461,7 +489,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -477,7 +504,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKitSimple;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -527,7 +554,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -550,7 +576,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKitSimple;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -585,11 +611,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ReportKitSimpleWidgetExtension.entitlements;
-				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Widget/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ReportKit;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -609,16 +633,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ReportKitSimple.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Resources/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKit;
-				PRODUCT_NAME = ReportKitSimple;
+				PRODUCT_NAME = ReportKit;
 				REPORTKIT_SUPABASE_ANON_KEY = "$(REPORTKIT_SUPABASE_ANON_KEY)";
 				REPORTKIT_SUPABASE_URL = "$(REPORTKIT_SUPABASE_URL)";
 				SDKROOT = iphoneos;
@@ -651,16 +674,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ReportKitSimple.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Resources/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ai.ReportKit;
-				PRODUCT_NAME = ReportKitSimple;
+				PRODUCT_NAME = ReportKit;
 				REPORTKIT_SUPABASE_ANON_KEY = "$(REPORTKIT_SUPABASE_ANON_KEY)";
 				REPORTKIT_SUPABASE_URL = "$(REPORTKIT_SUPABASE_URL)";
 				SDKROOT = iphoneos;
@@ -672,11 +694,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ReportKitSimpleWidgetExtension.entitlements;
-				DEVELOPMENT_TEAM = 9NG3C5HP77;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Widget/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ReportKit;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

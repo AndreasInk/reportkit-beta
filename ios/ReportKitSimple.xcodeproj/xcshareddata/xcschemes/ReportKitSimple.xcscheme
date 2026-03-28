@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D280FAB17CD42EC54EF7622A"
-               BuildableName = "ReportKitSimple.app"
+               BuildableName = "ReportKit.app"
                BlueprintName = "ReportKitSimple"
                ReferencedContainer = "container:ReportKitSimple.xcodeproj">
             </BuildableReference>
@@ -73,7 +73,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D280FAB17CD42EC54EF7622A"
-            BuildableName = "ReportKitSimple.app"
+            BuildableName = "ReportKit.app"
             BlueprintName = "ReportKitSimple"
             ReferencedContainer = "container:ReportKitSimple.xcodeproj">
          </BuildableReference>
@@ -117,23 +117,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D280FAB17CD42EC54EF7622A"
-            BuildableName = "ReportKitSimple.app"
+            BuildableName = "ReportKit.app"
             BlueprintName = "ReportKitSimple"
             ReferencedContainer = "container:ReportKitSimple.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "REPORTKIT_SUPABASE_URL"
-            value = "https://bsakakesupfudupbxflj.supabase.co"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "REPORTKIT_SUPABASE_ANON_KEY"
-            value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzYWtha2VzdXBmdWR1cGJ4ZmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwODI4NDQsImV4cCI6MjA4NzY1ODg0NH0.oFUeZiR8Nz01pdY0FCh6OP38LveHKYlmL46jMxnUhBo"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -146,7 +134,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D280FAB17CD42EC54EF7622A"
-            BuildableName = "ReportKitSimple.app"
+            BuildableName = "ReportKit.app"
             BlueprintName = "ReportKitSimple"
             ReferencedContainer = "container:ReportKitSimple.xcodeproj">
          </BuildableReference>

@@ -175,4 +175,35 @@ struct ReportKitSimpleTests {
         #expect(state.status == .warning)
         #expect(state.action == "Review the new paywall copy before noon.")
     }
+
+    @Test("Config parser rejects unresolved placeholders outside tests")
+    func configRejectsUnresolvedPlaceholders() throws {
+        let source = ReportKitSimpleConfig.Source(
+            environment: [:],
+            infoDictionary: [
+                "REPORTKIT_SUPABASE_URL": "$(REPORTKIT_SUPABASE_URL)",
+                "REPORTKIT_SUPABASE_ANON_KEY": "$(REPORTKIT_SUPABASE_ANON_KEY)"
+            ],
+            isRunningTests: false
+        )
+
+        #expect(throws: ReportKitSimpleConfigError.missingOrUnresolvedKey("REPORTKIT_SUPABASE_URL")) {
+            _ = try ReportKitSimpleConfig.requiredValue("REPORTKIT_SUPABASE_URL", source: source)
+        }
+    }
+
+    @Test("Config parser uses deterministic test fallback values")
+    func configUsesTestFallbackValues() throws {
+        let source = ReportKitSimpleConfig.Source(
+            environment: [:],
+            infoDictionary: [:],
+            isRunningTests: true
+        )
+
+        let url = try ReportKitSimpleConfig.requiredValue("REPORTKIT_SUPABASE_URL", source: source)
+        let anon = try ReportKitSimpleConfig.requiredValue("REPORTKIT_SUPABASE_ANON_KEY", source: source)
+
+        #expect(url == "https://example.supabase.co")
+        #expect(anon == "test-anon-key")
+    }
 }

@@ -9,7 +9,7 @@
 1. Confirm they are signed in on both ends with the same account:
    - iOS app login: email + password
    - CLI login: `reportkit auth --email <email> --password <password>`
-2. Confirm `reportkit status` succeeds and token expiry looks valid.
+2. Confirm `reportkit status` succeeds and the cached CLI session state is current enough for the next send.
 3. Help them define report topics and send triggers.
 4. Provide copy-paste `reportkit send` commands for each topic.
 

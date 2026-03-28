@@ -5,6 +5,28 @@ import { configPath, readConfig, writeConfig } from "./config.js";
 import { buildSendBody, normalizeApnsEnv, normalizeStatus, normalizeVisualStyle, optionalFlag, parseArgs, requiredFlag } from "./format.js";
 import type { ReportKitConfig } from "./types.js";
 
+function describeSessionExpiry(expiresAt: string, now: Date = new Date()): string[] {
+  const expiry = new Date(expiresAt);
+  if (Number.isNaN(expiry.getTime())) {
+    return [
+      `Cached session expires at: ${expiresAt}`,
+      "Cached session state is invalid. Run `reportkit auth --email ... --password ...`."
+    ];
+  }
+
+  if (expiry <= now) {
+    return [
+      `Cached session expired at: ${expiresAt}`,
+      "Status shows local cached session metadata only. The next authenticated request will try to refresh it, or run `reportkit auth --email ... --password ...`."
+    ];
+  }
+
+  return [
+    `Cached session expires at: ${expiresAt}`,
+    "Status shows local cached session metadata only. It does not reflect the mobile app session."
+  ];
+}
+
 function readAuthFlags(flags: Map<string, string | true>): { email: string; password: string } {
   const email = optionalFlag(flags, "email") ?? process.env.REPORTKIT_EMAIL;
   const password = optionalFlag(flags, "password") ?? process.env.REPORTKIT_PASSWORD;
@@ -46,7 +68,9 @@ export function statusCommand(): void {
 
   console.log(`Signed in as: ${config.session.email}`);
   console.log(`User ID: ${config.session.userID}`);
-  console.log(`Token expires at: ${config.session.expiresAt}`);
+  for (const line of describeSessionExpiry(config.session.expiresAt)) {
+    console.log(line);
+  }
   console.log(`Config: ${configPath()}`);
 }
 

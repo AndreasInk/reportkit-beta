@@ -8,7 +8,7 @@ struct ReportKitSimpleRootView: View {
             Group {
                 switch model.phase {
                 case .launching:
-                    ProgressView("Loading ReportKitSimple")
+                    ProgressView("Loading ReportKit")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 case .signedOut(let signedOutScreen):
                     switch signedOutScreen {
@@ -24,7 +24,7 @@ struct ReportKitSimpleRootView: View {
             .padding(20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("ReportKitSimple")
+            .navigationTitle("ReportKit")
             .navigationBarTitleDisplayMode(.inline)
         }
         .task {

@@ -12,13 +12,57 @@ interface RequestOptions {
   session?: CliSession | null;
 }
 
+function describeNetworkError(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+
+  const cause = error.cause;
+  if (cause instanceof Error) {
+    const details = [cause.message];
+    const code = "code" in cause ? String((cause as { code?: unknown }).code ?? "") : "";
+    if (code && !details.includes(code)) {
+      details.push(code);
+    }
+    return `${error.message}: ${details.join(" [")}${details.length > 1 ? "]" : ""}`;
+  }
+
+  if (cause) {
+    return `${error.message}: ${String(cause)}`;
+  }
+
+  return error.message;
+}
+
+async function fetchJSON<T>(
+  url: URL | string,
+  init: RequestInit,
+  context: string
+): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(url, init);
+  } catch (error) {
+    throw new Error(`${context} request failed for ${String(url)}: ${describeNetworkError(error)}`);
+  }
+
+  const text = await response.text();
+  const data = text ? (JSON.parse(text) as T | { error?: string }) : ({} as T);
+  if (!response.ok) {
+    const error = typeof data === "object" && data && "error" in data ? String(data.error ?? text) : text;
+    throw new Error(`${context} failed (${response.status}): ${error}`);
+  }
+
+  return data as T;
+}
+
 async function requestJSON<T>(
   config: ReportKitConfig,
   functionName: string,
   options: RequestOptions = {}
 ): Promise<T> {
   const withToken = async (token: string): Promise<T> => {
-    const response = await fetch(urlFor(functionName, config.supabaseUrl), {
+    return fetchJSON<T>(urlFor(functionName, config.supabaseUrl), {
       method: options.method ?? "POST",
       headers: {
         "content-type": "application/json",
@@ -26,15 +70,7 @@ async function requestJSON<T>(
         authorization: `Bearer ${token}`
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body)
-    });
-
-    const text = await response.text();
-    const data = text ? (JSON.parse(text) as T | { error?: string }) : ({} as T);
-    if (!response.ok) {
-      const error = typeof data === "object" && data && "error" in data ? String(data.error ?? text) : text;
-      throw new Error(`${functionName} failed (${response.status}): ${error}`);
-    }
-    return data as T;
+    }, functionName);
   };
 
   if (!options.session?.accessToken) {
@@ -81,7 +117,7 @@ async function refreshSession(config: ReportKitConfig): Promise<CliLoginResponse
   const url = new URL("/auth/v1/token", config.supabaseUrl);
   url.searchParams.set("grant_type", "refresh_token");
 
-  const response = await fetch(url, {
+  return fetchJSON<CliLoginResponse>(url, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -90,18 +126,7 @@ async function refreshSession(config: ReportKitConfig): Promise<CliLoginResponse
     body: JSON.stringify({
       refresh_token: config.session.refreshToken
     })
-  });
-
-  const text = await response.text();
-  const data = text ? (JSON.parse(text) as CliLoginResponse | { error: string }) : ({} as CliLoginResponse);
-  if (!response.ok) {
-    const error = typeof data === "object" && data && "error" in data
-      ? String((data as { error: string }).error)
-      : text;
-    throw new Error(`auth refresh failed (${response.status}): ${error}`);
-  }
-
-  return data as CliLoginResponse;
+  }, "auth refresh");
 }
 
 export function cliSignIn(
@@ -112,7 +137,7 @@ export function cliSignIn(
   const url = new URL("/auth/v1/token", config.supabaseUrl);
   url.searchParams.set("grant_type", "password");
 
-  return fetch(url, {
+  return fetchJSON<CliLoginResponse>(url, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -122,17 +147,7 @@ export function cliSignIn(
       email,
       password
     })
-  }).then(async (response) => {
-    const text = await response.text();
-    const data = text ? (JSON.parse(text) as CliLoginResponse | { error: string }) : ({} as CliLoginResponse);
-    if (!response.ok) {
-      const error = typeof data === "object" && data && "error" in data
-        ? String((data as { error: string }).error)
-        : text;
-      throw new Error(`auth failed (${response.status}): ${error}`);
-    }
-    return data as CliLoginResponse;
-  });
+  }, "auth");
 }
 
 export function sendLiveActivity(

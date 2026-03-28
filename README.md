@@ -52,8 +52,11 @@ reportkit skill print --target claude
 
 The CLI requires both `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY` for local operation.
 
-- Prefer exporting them as environment variables before running CLI commands.
-- `defaultConfig` does not include fallback values; if missing, commands fail with a clear error.
+- Resolution order is:
+  1. process environment
+  2. machine-global `~/.reportkit/.env`
+- Placeholder values are rejected up front with a clear error.
+- `~/.config/reportkit-simple/config.json` stores CLI session state only. It is not used as a backup source for Supabase URL/key.
 
 The iOS app reads the same keys from `Info.plist` (`REPORTKIT_SUPABASE_URL`, `REPORTKIT_SUPABASE_ANON_KEY`) and will precondition-fail at launch if unresolved.
 

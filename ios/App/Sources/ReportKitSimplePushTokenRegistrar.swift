@@ -82,7 +82,7 @@ final class ReportKitSimplePushTokenRegistrar {
         do {
             let state = ReportKitSimpleAttributes.ContentState(
                 generatedAt: Int64(Date().timeIntervalSince1970),
-                title: "ReportKitSimple",
+                title: "ReportKit",
                 summary: "Push-to-start provisioning",
                 status: .good,
                 action: nil,
