@@ -1,0 +1,7 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+[features]
+codex_hooks = true
+
+[shell_environment_policy.set]
+REPORTKIT_ENABLE_HOOK_SEND = "1"

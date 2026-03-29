@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -36,6 +37,79 @@ def output_dir(root: Path) -> Path:
     path = root / ".codex" / "reportkit-hooks"
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def thread_state_dir(out_dir: Path) -> Path:
+    path = out_dir / "threads"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def sanitize_thread_id(raw: str) -> str:
+    sanitized = re.sub(r"[^A-Za-z0-9_-]+", "-", raw).strip("-")
+    if not sanitized:
+        return "default"
+    return sanitized[:64]
+
+
+def activity_context(stage: str, hook_input: dict[str, Any], out_dir: Path) -> tuple[str, str]:
+    thread_id = str(hook_input.get("turn_id") or "").strip()
+    if not thread_id:
+        return ("start" if stage == "pre" else "update", "codex-tool-use")
+
+    sanitized_thread_id = sanitize_thread_id(thread_id)
+    activity_id = f"codex-thread-{sanitized_thread_id}"
+    state_path = thread_state_dir(out_dir) / f"{sanitized_thread_id}.json"
+
+    if state_path.exists():
+        return ("update", activity_id)
+
+    if stage == "pre":
+        state_path.write_text(
+            json.dumps({"activityId": activity_id, "threadId": thread_id, "createdAt": int(time.time())}) + "\n",
+            encoding="utf-8",
+        )
+        return ("start", activity_id)
+
+    return ("update", activity_id)
+
+
+def read_project_environment_file(root: Path) -> dict[str, str]:
+    environment_path = root / ".codex" / "environments" / "environment.toml"
+    if not environment_path.exists():
+        return {}
+
+    env: dict[str, str] = {}
+    for line in environment_path.read_text(encoding="utf-8").splitlines():
+        match = re.match(r'^\s*([A-Z0-9_]+)="(.*)"\s*$', line)
+        if not match:
+            continue
+        key, value = match.groups()
+        env[key] = value
+    return env
+
+
+def merge_reportkit_env(root: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    fallback_env = read_project_environment_file(root)
+    for key in ("REPORTKIT_SUPABASE_URL", "REPORTKIT_SUPABASE_ANON_KEY"):
+        if env.get(key):
+            continue
+        if fallback_env.get(key):
+            env[key] = fallback_env[key]
+    return env
+
+
+def reportkit_send_command(root: Path) -> list[str] | None:
+    installed = shutil.which("reportkit")
+    if installed:
+        return [installed, "send"]
+
+    local_cli = root / "cli" / "dist" / "src" / "index.js"
+    if local_cli.exists() and shutil.which("node"):
+        return ["node", str(local_cli), "send"]
+
+    return None
 
 
 def sanitize_command(command: str) -> str:
@@ -140,13 +214,53 @@ def append_log(log_path: Path, record: dict[str, Any]) -> None:
         handle.write(json.dumps(record, sort_keys=True) + "\n")
 
 
-def maybe_send_payload(root: Path, payload_path: Path) -> None:
-    if os.environ.get("REPORTKIT_ENABLE_HOOK_SEND") != "1":
+def maybe_send_payload(root: Path, payload_path: Path, out_dir: Path) -> None:
+    if os.environ.get("REPORTKIT_ENABLE_HOOK_SEND") == "0":
+        append_log(
+            out_dir / "send-results.jsonl",
+            {
+                "createdAt": int(time.time()),
+                "payloadPath": str(payload_path),
+                "sent": False,
+                "reason": "REPORTKIT_ENABLE_HOOK_SEND explicitly disabled",
+            },
+        )
         return
 
-    env = os.environ.copy()
-    command = ["reportkit", "send", "--file", str(payload_path)]
-    subprocess.run(command, cwd=root, env=env, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    command = reportkit_send_command(root)
+    if command is None:
+        append_log(
+            out_dir / "send-results.jsonl",
+            {
+                "createdAt": int(time.time()),
+                "payloadPath": str(payload_path),
+                "sent": False,
+                "reason": "reportkit command unavailable",
+            },
+        )
+        return
+
+    env = merge_reportkit_env(root)
+    command = [*command, "--file", str(payload_path)]
+    result = subprocess.run(
+        command,
+        cwd=root,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    append_log(
+        out_dir / "send-results.jsonl",
+        {
+            "createdAt": int(time.time()),
+            "payloadPath": str(payload_path),
+            "sent": result.returncode == 0,
+            "returncode": result.returncode,
+            "stdout": result.stdout.strip(),
+            "stderr": result.stderr.strip(),
+        },
+    )
 
 
 def main() -> int:
@@ -159,6 +273,9 @@ def main() -> int:
     root = repo_root()
     out_dir = output_dir(root)
     payload = build_progress_payload(stage, hook_input)
+    event, activity_id = activity_context(stage, hook_input, out_dir)
+    payload["event"] = event
+    payload["activityId"] = activity_id
 
     payload_path = out_dir / f"last-{stage}-tool-payload.json"
     payload_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -177,7 +294,7 @@ def main() -> int:
         },
     )
 
-    maybe_send_payload(root, payload_path)
+    maybe_send_payload(root, payload_path, out_dir)
     return 0
 
 

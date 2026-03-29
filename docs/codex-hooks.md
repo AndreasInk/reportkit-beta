@@ -43,6 +43,11 @@ Codex can load hooks from either:
 
 This repo uses the repo-local option.
 
+This project now also includes a repo-local `.codex/config.toml` that:
+
+- enables `features.codex_hooks = true`
+- sets `REPORTKIT_ENABLE_HOOK_SEND=1` for subprocesses in this project
+
 ## Optional live sending
 
 To let the hook actually publish through the existing CLI, set:
@@ -51,12 +56,18 @@ To let the hook actually publish through the existing CLI, set:
 export REPORTKIT_ENABLE_HOOK_SEND=1
 ```
 
+For this repo, the project-scoped Codex config already sets that for you.
+
 You also need the normal ReportKit CLI prerequisites:
 
 - `reportkit` on your `PATH`
 - `REPORTKIT_SUPABASE_URL`
 - `REPORTKIT_SUPABASE_ANON_KEY`
 - an authenticated CLI session from `reportkit auth --email ...`
+
+The hook script also falls back to the repo-local `.codex/environments/environment.toml` for `REPORTKIT_SUPABASE_URL` and `REPORTKIT_SUPABASE_ANON_KEY` when those vars are not already present in the process environment.
+
+If the global `reportkit` binary is not installed, the hook will also try the repo-local CLI entrypoint at `cli/dist/src/index.js`.
 
 When `REPORTKIT_ENABLE_HOOK_SEND` is not set to `1`, the hook only writes local payload files for inspection.
 
