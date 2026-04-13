@@ -32,12 +32,14 @@ struct TokenStatusSnapshot: Equatable {
     var lastPushUploadAt: Date?
     var lastDeviceUploadAt: Date?
     var notificationsAuthorized: Bool
+    var alarmsEnabled: Bool
 
     static let empty = TokenStatusSnapshot(
         pushToStartToken: "",
         deviceToken: "",
         lastPushUploadAt: nil,
         lastDeviceUploadAt: nil,
-        notificationsAuthorized: false
+        notificationsAuthorized: false,
+        alarmsEnabled: false
     )
 }

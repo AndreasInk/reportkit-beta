@@ -201,6 +201,7 @@ private struct SignedInScreen: View {
                     ("Push-to-start", model.tokenStatus.pushToStartToken.isEmpty ? "Waiting" : "Ready"),
                     ("Device token", model.tokenStatus.deviceToken.isEmpty ? "Waiting" : "Ready"),
                     ("Notifications", model.tokenStatus.notificationsAuthorized ? "Allowed" : "Not granted"),
+                    ("Alarm scheduling", model.tokenStatus.alarmsEnabled ? "Enabled" : "Not enabled"),
                     ("Push upload", model.tokenStatus.lastPushUploadAt?.formatted(date: .omitted, time: .shortened) ?? "Pending"),
                     ("Device upload", model.tokenStatus.lastDeviceUploadAt?.formatted(date: .omitted, time: .shortened) ?? "Pending")
                 ]
@@ -208,6 +209,12 @@ private struct SignedInScreen: View {
 
             HStack(spacing: 12) {
                 LocalDemoActivityMenu(label: "Local Test Activity")
+
+                Button("Enable Alarms") {
+                    Task { await model.enableAlarmScheduling() }
+                }
+                .buttonStyle(.bordered)
+                .disabled(model.isWorking)
 
                 Button("Refresh Status") {
                     Task { await model.refresh() }
@@ -341,7 +348,7 @@ private struct RootPreviewContainer: View {
             deviceToken: "def",
             lastPushUploadAt: .now,
             lastDeviceUploadAt: .now,
-            notificationsAuthorized: true
+            notificationsAuthorized: true, alarmsEnabled: true
         )
     )
 }

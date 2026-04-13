@@ -32,7 +32,8 @@ final class ReportKitSimplePushTokenRegistrar {
             deviceToken: UserDefaults.standard.string(forKey: Keys.deviceToken) ?? "",
             lastPushUploadAt: UserDefaults.standard.object(forKey: Keys.lastPushUpload) as? Date,
             lastDeviceUploadAt: UserDefaults.standard.object(forKey: Keys.lastDeviceUpload) as? Date,
-            notificationsAuthorized: settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
+            notificationsAuthorized: settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional,
+            alarmsEnabled: UserDefaults.standard.bool(forKey: "reportkit.simple.alarmsEnabled")
         )
     }
 

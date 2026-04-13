@@ -19,11 +19,14 @@
 		722E4653C57774AB3D216640 /* ReportKitSimpleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD749A78D26EEC5AC3DD743 /* ReportKitSimpleViews.swift */; };
 		73E531B656512F31B5226750 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0A63C553583F764CA41E4493 /* Supabase */; };
 		77DF68BFA21678B7DE59B140 /* ReportKitSimplePushTokenRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79ED2A8184166DEE1A1BB9C /* ReportKitSimplePushTokenRegistrar.swift */; };
+		7BA5AC624741C1D95F3CC7A1 /* RemoteAlarmCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6970558358E5D8A33B4FD08 /* RemoteAlarmCommand.swift */; };
 		86A777843C9BD4A0F2A8BC76 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */; };
 		89942A888696D02E2E4FFD91 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */; };
 		AAFD3A1DA4A76D5111A5D9ED /* ReportKitSimpleAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9252F62799C447AE957B3362 /* ReportKitSimpleAttributes.swift */; };
+		B1A35734A12A0C84AB3D2699 /* RemoteAlarmHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B697EF2D0A54E528FE7E4E2D /* RemoteAlarmHandler.swift */; };
 		B590C8CDE26AC8537B86664E /* ReportKitSimpleTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5FFB56C7F25343EBB74CF0 /* ReportKitSimpleTypes.swift */; };
 		B879C5288F1986A770264077 /* ReportKitSimpleConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C242218296A5AF05FF43DE3 /* ReportKitSimpleConfig.swift */; };
+		D0D8827E90A9D6BAE17F8353 /* CalendarAlarmManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E061A6D0B23AE6E4AD8D2A62 /* CalendarAlarmManager.swift */; };
 		D7C999F5301D97FA382FD77E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */; };
 		DA48DF291610741289F4E040 /* ReportKitSimpleAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE852AA447203DCD2A20A2E3 /* ReportKitSimpleAppDelegate.swift */; };
 		EB5D8D94471B7A2DF65EF3FE /* ReportKitSimpleAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9252F62799C447AE957B3362 /* ReportKitSimpleAttributes.swift */; };
@@ -80,12 +83,15 @@
 		6B42C452BF484B9B2B22E9A1 /* ReportKitSimpleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleUITests.swift; sourceTree = "<group>"; };
 		6E73F1CBD982F917A1A08A52 /* ReportKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReportKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FD749A78D26EEC5AC3DD743 /* ReportKitSimpleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleViews.swift; sourceTree = "<group>"; };
+		A6970558358E5D8A33B4FD08 /* RemoteAlarmCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAlarmCommand.swift; sourceTree = "<group>"; };
 		9252F62799C447AE957B3362 /* ReportKitSimpleAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleAttributes.swift; sourceTree = "<group>"; };
+		B697EF2D0A54E528FE7E4E2D /* RemoteAlarmHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAlarmHandler.swift; sourceTree = "<group>"; };
 		BBFEA61C0E51E674C80F10CE /* ReportKitSimpleUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ReportKitSimpleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0E0E65F1E683DD53B8DFB08 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C48646C63700F8B64A6DF55F /* ReportKitSimpleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleApp.swift; sourceTree = "<group>"; };
 		D79ED2A8184166DEE1A1BB9C /* ReportKitSimplePushTokenRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimplePushTokenRegistrar.swift; sourceTree = "<group>"; };
 		E43F8A262B8DCCC3328E49B8 /* ReportKitSimpleStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleStorage.swift; sourceTree = "<group>"; };
+		E061A6D0B23AE6E4AD8D2A62 /* CalendarAlarmManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarAlarmManager.swift; sourceTree = "<group>"; };
 		EE852AA447203DCD2A20A2E3 /* ReportKitSimpleAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleAppDelegate.swift; sourceTree = "<group>"; };
 		F4DFE095C264C6F7AB8197C2 /* ReportKitSimpleSupabaseAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportKitSimpleSupabaseAuth.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -134,8 +140,11 @@
 				C48646C63700F8B64A6DF55F /* ReportKitSimpleApp.swift */,
 				EE852AA447203DCD2A20A2E3 /* ReportKitSimpleAppDelegate.swift */,
 				199A5BF756257238BEDB372B /* ReportKitSimpleAppModel.swift */,
+				E061A6D0B23AE6E4AD8D2A62 /* CalendarAlarmManager.swift */,
 				1C242218296A5AF05FF43DE3 /* ReportKitSimpleConfig.swift */,
 				D79ED2A8184166DEE1A1BB9C /* ReportKitSimplePushTokenRegistrar.swift */,
+				A6970558358E5D8A33B4FD08 /* RemoteAlarmCommand.swift */,
+				B697EF2D0A54E528FE7E4E2D /* RemoteAlarmHandler.swift */,
 				E43F8A262B8DCCC3328E49B8 /* ReportKitSimpleStorage.swift */,
 				F4DFE095C264C6F7AB8197C2 /* ReportKitSimpleSupabaseAuth.swift */,
 				3A5FFB56C7F25343EBB74CF0 /* ReportKitSimpleTypes.swift */,
@@ -381,9 +390,12 @@
 				26097AB51332E857BCC0877B /* ReportKitSimpleApp.swift in Sources */,
 				DA48DF291610741289F4E040 /* ReportKitSimpleAppDelegate.swift in Sources */,
 				F6852324D7DAE6F011D7383A /* ReportKitSimpleAppModel.swift in Sources */,
+				D0D8827E90A9D6BAE17F8353 /* CalendarAlarmManager.swift in Sources */,
 				EB5D8D94471B7A2DF65EF3FE /* ReportKitSimpleAttributes.swift in Sources */,
 				B879C5288F1986A770264077 /* ReportKitSimpleConfig.swift in Sources */,
 				77DF68BFA21678B7DE59B140 /* ReportKitSimplePushTokenRegistrar.swift in Sources */,
+				7BA5AC624741C1D95F3CC7A1 /* RemoteAlarmCommand.swift in Sources */,
+				B1A35734A12A0C84AB3D2699 /* RemoteAlarmHandler.swift in Sources */,
 				694257297938A81D7E1D9732 /* ReportKitSimpleStorage.swift in Sources */,
 				444DB458B13383FF68C3AC12 /* ReportKitSimpleSupabaseAuth.swift in Sources */,
 				B590C8CDE26AC8537B86664E /* ReportKitSimpleTypes.swift in Sources */,

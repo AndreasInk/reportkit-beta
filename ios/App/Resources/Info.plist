@@ -22,6 +22,8 @@
 	<false/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Allow ReportKit to turn urgent push reports into local alarms.</string>
 	<key>REPORTKIT_APNS_ENV</key>
 	<string>sandbox</string>
 	<key>REPORTKIT_SUPABASE_ANON_KEY</key>

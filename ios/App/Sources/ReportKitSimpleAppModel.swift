@@ -195,6 +195,23 @@ final class ReportKitSimpleAppModel: ObservableObject {
         tokenStatus = await ReportKitSimplePushTokenRegistrar.shared.currentStatus()
     }
 
+    func enableAlarmScheduling() async {
+        isWorking = true
+        errorMessage = nil
+        infoMessage = nil
+        defer { isWorking = false }
+
+        do {
+            try await CalendarAlarmManager.shared.requestPermissions()
+            UserDefaults.standard.set(true, forKey: "reportkit.simple.alarmsEnabled")
+            infoMessage = "Alarm scheduling enabled."
+        } catch {
+            errorMessage = "Unable to enable alarms: \(error.localizedDescription)"
+        }
+
+        await refreshTokenStatus()
+    }
+
     func startLocalTestActivity() async {
         await startLocalTestActivity(style: .minimal)
     }
@@ -249,7 +266,8 @@ final class ReportKitSimpleAppModel: ObservableObject {
             deviceToken: "preview-device-token",
             lastPushUploadAt: .now,
             lastDeviceUploadAt: .now,
-            notificationsAuthorized: true
+            notificationsAuthorized: true,
+            alarmsEnabled: true
         )
     }
 }
