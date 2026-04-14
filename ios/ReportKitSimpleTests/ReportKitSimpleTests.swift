@@ -336,4 +336,28 @@ struct ReportKitSimpleTests {
         #expect(url == "https://example.supabase.co")
         #expect(anon == "test-anon-key")
     }
+
+    @Test("Remote alarm diagnostics suppress recent duplicate alarm ids")
+    func remoteAlarmDiagnosticsDedupesRecentIDs() {
+        let suite = "com.reportkit.tests.remote-alarm-diagnostics"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+
+        let diagnostics = RemoteAlarmDiagnostics(defaults: defaults, duplicateWindow: 60)
+        #expect(diagnostics.shouldIgnoreDuplicate("alarm-1") == false)
+
+        diagnostics.record(
+            status: "Scheduled",
+            source: "background-fetch",
+            alarmID: "alarm-1",
+            detail: "Test"
+        )
+
+        #expect(diagnostics.shouldIgnoreDuplicate("alarm-1"))
+        #expect(diagnostics.shouldIgnoreDuplicate("alarm-2") == false)
+        #expect(diagnostics.snapshot.status == "Scheduled: Test")
+        #expect(diagnostics.snapshot.source == "background-fetch")
+
+        defaults.removePersistentDomain(forName: suite)
+    }
 }

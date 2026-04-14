@@ -33,6 +33,9 @@ struct TokenStatusSnapshot: Equatable {
     var lastDeviceUploadAt: Date?
     var notificationsAuthorized: Bool
     var alarmsEnabled: Bool
+    var lastAlarmStatus: String
+    var lastAlarmSource: String
+    var lastAlarmUpdatedAt: Date?
 
     static let empty = TokenStatusSnapshot(
         pushToStartToken: "",
@@ -40,6 +43,9 @@ struct TokenStatusSnapshot: Equatable {
         lastPushUploadAt: nil,
         lastDeviceUploadAt: nil,
         notificationsAuthorized: false,
-        alarmsEnabled: false
+        alarmsEnabled: false,
+        lastAlarmStatus: "",
+        lastAlarmSource: "",
+        lastAlarmUpdatedAt: nil
     )
 }

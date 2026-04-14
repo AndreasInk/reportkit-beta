@@ -27,13 +27,17 @@ final class ReportKitSimplePushTokenRegistrar {
 
     func currentStatus() async -> TokenStatusSnapshot {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
+        let alarmSnapshot = await MainActor.run { RemoteAlarmDiagnostics.shared.snapshot }
         return TokenStatusSnapshot(
             pushToStartToken: UserDefaults.standard.string(forKey: Keys.pushToken) ?? "",
             deviceToken: UserDefaults.standard.string(forKey: Keys.deviceToken) ?? "",
             lastPushUploadAt: UserDefaults.standard.object(forKey: Keys.lastPushUpload) as? Date,
             lastDeviceUploadAt: UserDefaults.standard.object(forKey: Keys.lastDeviceUpload) as? Date,
             notificationsAuthorized: settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional,
-            alarmsEnabled: UserDefaults.standard.bool(forKey: "reportkit.simple.alarmsEnabled")
+            alarmsEnabled: UserDefaults.standard.bool(forKey: "reportkit.simple.alarmsEnabled"),
+            lastAlarmStatus: alarmSnapshot.status,
+            lastAlarmSource: alarmSnapshot.source,
+            lastAlarmUpdatedAt: alarmSnapshot.updatedAt
         )
     }
 

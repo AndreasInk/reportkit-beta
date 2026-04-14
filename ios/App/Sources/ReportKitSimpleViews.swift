@@ -203,7 +203,10 @@ private struct SignedInScreen: View {
                     ("Notifications", model.tokenStatus.notificationsAuthorized ? "Allowed" : "Not granted"),
                     ("Alarm scheduling", model.tokenStatus.alarmsEnabled ? "Enabled" : "Not enabled"),
                     ("Push upload", model.tokenStatus.lastPushUploadAt?.formatted(date: .omitted, time: .shortened) ?? "Pending"),
-                    ("Device upload", model.tokenStatus.lastDeviceUploadAt?.formatted(date: .omitted, time: .shortened) ?? "Pending")
+                    ("Device upload", model.tokenStatus.lastDeviceUploadAt?.formatted(date: .omitted, time: .shortened) ?? "Pending"),
+                    ("Last alarm", model.tokenStatus.lastAlarmStatus.isEmpty ? "No push handled yet" : model.tokenStatus.lastAlarmStatus),
+                    ("Alarm source", model.tokenStatus.lastAlarmSource.isEmpty ? "N/A" : model.tokenStatus.lastAlarmSource),
+                    ("Alarm updated", model.tokenStatus.lastAlarmUpdatedAt?.formatted(date: .omitted, time: .shortened) ?? "Never")
                 ]
             )
 
@@ -348,7 +351,11 @@ private struct RootPreviewContainer: View {
             deviceToken: "def",
             lastPushUploadAt: .now,
             lastDeviceUploadAt: .now,
-            notificationsAuthorized: true, alarmsEnabled: true
+            notificationsAuthorized: true,
+            alarmsEnabled: true,
+            lastAlarmStatus: "Scheduled",
+            lastAlarmSource: "background-fetch",
+            lastAlarmUpdatedAt: .now
         )
     )
 }

@@ -267,7 +267,10 @@ final class ReportKitSimpleAppModel: ObservableObject {
             lastPushUploadAt: .now,
             lastDeviceUploadAt: .now,
             notificationsAuthorized: true,
-            alarmsEnabled: true
+            alarmsEnabled: true,
+            lastAlarmStatus: "Scheduled",
+            lastAlarmSource: "background-fetch",
+            lastAlarmUpdatedAt: .now
         )
     }
 }
