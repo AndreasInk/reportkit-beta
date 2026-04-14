@@ -4,7 +4,7 @@ This folder contains the backend pieces for ReportKit Beta: edge functions, SQL 
 
 ## What Lives Here
 
-- `functions/`: token registration, latest-token lookup, and Live Activity send handlers
+- `functions/`: token registration, latest-token lookup, Live Activity send handlers, and alarm send handlers
 - `migrations/`: database schema for tokens, events, and push deliveries
 - `PRODUCTION_ROLLOUT.md`: deployment and rollout notes
 
@@ -16,6 +16,7 @@ Current functions:
 - `reportkit-device-token`
 - `reportkit-latest-token`
 - `reportkit-send-live-activity`
+- `reportkit-send-alarm`
 
 Shared auth and Supabase client helpers live under `functions/_shared/`.
 

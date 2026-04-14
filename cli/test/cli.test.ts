@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { Readable } from "node:stream";
-import { buildSendBody, normalizeVisualStyle } from "../src/format.js";
+import { buildAlarmBody, buildSendBody, normalizeVisualStyle } from "../src/format.js";
 import { resolveAuthCredentials, statusCommand } from "../src/commands.js";
 import { configPath, defaultConfig, readConfig, writeConfig } from "../src/config.js";
 import { cliSignIn } from "../src/api.js";
@@ -97,6 +97,41 @@ test("buildSendBody preserves progress payload fields", () => {
   assert.equal(body.payload.progressPercent, 68);
   assert.equal(body.payload.completedSteps, 17);
   assert.equal(body.payload.totalSteps, 25);
+});
+
+test("buildAlarmBody supports fire_in_seconds payloads", () => {
+  const body = buildAlarmBody({
+    title: "Security check",
+    fireInSeconds: 60,
+    apnsEnv: "production",
+    alarmId: "alarm-123",
+  });
+
+  assert.deepEqual(body, {
+    title: "Security check",
+    apns_env: "production",
+    fire_in_seconds: 60,
+    alarm_id: "alarm-123",
+  });
+});
+
+test("buildAlarmBody supports fire_at payloads", () => {
+  const body = buildAlarmBody({
+    title: "Delayed review",
+    fireAt: "2026-04-13T10:30:00.000Z",
+    alertTitle: "ReportKit Alarm",
+    alertBody: "Check the current run.",
+    deviceInstallId: "device-1",
+  });
+
+  assert.deepEqual(body, {
+    title: "Delayed review",
+    apns_env: "sandbox",
+    fire_at: "2026-04-13T10:30:00.000Z",
+    alert_title: "ReportKit Alarm",
+    alert_body: "Check the current run.",
+    device_install_id: "device-1",
+  });
 });
 
 test("statusCommand labels expiry as cached local session metadata", () => {

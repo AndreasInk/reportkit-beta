@@ -7,6 +7,7 @@ ReportKit Beta is a minimal parallel implementation focused only on:
 - Supabase email/password login on both CLI and iOS.
 - Device token upload via existing `reportkit-token` and `reportkit-device-token` endpoints.
 - Minimal Live Activity payload and delivery through `reportkit-send-live-activity`.
+- Minimal alarm-only payload and delivery through `reportkit-send-alarm`.
 - Minimal CLI-driven send path with no internal cron surface.
 
 ## System Shape
@@ -26,12 +27,13 @@ ReportKit Beta is a minimal parallel implementation focused only on:
 - Persists session metadata to `~/.config/reportkit-simple/config.json`.
 - Persists access/refresh tokens separately in `~/.config/reportkit-simple/session-store.json` with `0600` permissions and mirrors them to macOS Keychain as best-effort backup.
 - Sends with `reportkit send` using that stored session.
+- Sends alarm-only pushes with `reportkit alarm` using that stored session.
 
 ### Supabase additions
 
 - No new pairing tables/functions beyond the vendored backend in `supabase/`.
 - No CLI-session tables.
-- Authentication + token + live-activity routes are part of this repo and can be deployed into a fresh Supabase project.
+- Authentication + token + live-activity + alarm routes are part of this repo and can be deployed into a fresh Supabase project.
 
 ## Runtime Boundaries
 
@@ -45,9 +47,10 @@ ReportKit Beta is a minimal parallel implementation focused only on:
  - `status`
  - `action`
  - `deepLink`
+- `reportkit-send-alarm` targets uploaded device tokens and sends a standard APNs alert payload with a `reportkit.alarm` object for on-device scheduling.
 
 Scheduling for sending is handled in Codex/Claude workflows.  
-The CLI stays focused on explicit `reportkit send` operations.
+The CLI stays focused on explicit `reportkit send` and `reportkit alarm` operations.
 
 ## Progress Live Activity payload
 

@@ -1,4 +1,5 @@
 import type {
+  AlarmRequestBody,
   CliSession,
   CliLoginResponse,
   ReportKitConfig,
@@ -178,6 +179,16 @@ export function sendLiveActivity(
   body: SendRequestBody
 ): Promise<Record<string, unknown>> {
   return requestJSON<Record<string, unknown>>(config, "reportkit-send-live-activity", {
+    body,
+    session: persistedSession(config)
+  });
+}
+
+export function sendAlarm(
+  config: ReportKitConfig,
+  body: AlarmRequestBody
+): Promise<Record<string, unknown>> {
+  return requestJSON<Record<string, unknown>>(config, "reportkit-send-alarm", {
     body,
     session: persistedSession(config)
   });

@@ -28,6 +28,18 @@ export interface LiveActivityPushResponse {
   responseText: string;
 }
 
+export interface AlarmPushRequest {
+  tokenHex: string;
+  apnsEnv: ApnsEnv;
+  title: string;
+  alarmID?: string;
+  fireAt?: string;
+  fireInSeconds?: number;
+  alertTitle?: string;
+  alertBody?: string;
+  timestamp?: number;
+}
+
 interface APNSConfig {
   keyID: string;
   teamID: string;
@@ -99,6 +111,37 @@ function buildAPSBody(request: LiveActivityPushRequest): Record<string, unknown>
   return { aps };
 }
 
+function buildAlarmBody(request: AlarmPushRequest): Record<string, unknown> {
+  const timestamp = request.timestamp ?? Math.floor(Date.now() / 1000);
+  const alarm: Record<string, unknown> = {
+    title: request.title,
+    id: request.alarmID ?? String(timestamp),
+  };
+
+  if (typeof request.fireInSeconds === "number") {
+    alarm.fireInSeconds = request.fireInSeconds;
+  }
+
+  if (request.fireAt) {
+    alarm.fireAt = request.fireAt;
+  }
+
+  return {
+    aps: {
+      alert: {
+        title: request.alertTitle ?? "ReportKit",
+        body: request.alertBody ?? `Alarm scheduled: ${request.title}`,
+      },
+      sound: "default",
+      "content-available": 1,
+      timestamp,
+    },
+    reportkit: {
+      alarm,
+    },
+  };
+}
+
 function parseAPNSError(text: string): string | null {
   const parsed = asObject(safeJSONParse(text));
   if (!parsed) return null;
@@ -134,6 +177,37 @@ export async function sendLiveActivityPush(request: LiveActivityPushRequest): Pr
     method: "POST",
     headers,
     body: JSON.stringify(buildAPSBody(request)),
+  });
+
+  const text = await response.text();
+  const reason = response.ok ? null : parseAPNSError(text) ?? (text.trim() || null);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    apnsId: response.headers.get("apns-id"),
+    reason,
+    responseText: text,
+  };
+}
+
+export async function sendAlarmPush(request: AlarmPushRequest): Promise<LiveActivityPushResponse> {
+  const config = loadConfig();
+  const jwtToken = await buildProviderJWT(config);
+  const host = apnsHost(request.apnsEnv);
+
+  const headers = new Headers({
+    "apns-topic": config.bundleID,
+    "apns-push-type": "alert",
+    "apns-priority": "10",
+    "content-type": "application/json",
+    authorization: `bearer ${jwtToken}`,
+  });
+
+  const response = await fetch(`https://${host}/3/device/${request.tokenHex}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(buildAlarmBody(request)),
   });
 
   const text = await response.text();

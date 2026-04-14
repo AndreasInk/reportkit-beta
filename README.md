@@ -62,6 +62,7 @@ The beta flow is intentionally narrow: sign in on your Mac and iPhone with the s
 - signs the CLI and iPhone app into the same Supabase account
 - uploads Live Activity tokens from the phone
 - sends simple Live Activity updates from the CLI
+- sends alarm-only APNs pushes from the CLI
 - lets external Codex / Claude workflows or other local/hosted automation decide when to send
 - leaves scheduling outside the CLI instead of building cron into this project
 
@@ -119,6 +120,10 @@ reportkit send \
   --title "Revenue watch" \
   --summary "Down 8% vs yesterday" \
   --status warning
+
+reportkit alarm \
+  --title "Check security review" \
+  --in-seconds 60
 ```
 
 ## Typical Flow
@@ -127,11 +132,13 @@ reportkit send \
 2. Sign in with `reportkit auth`.
 3. Sign in on the iPhone app with the same account.
 4. Run `reportkit send` manually or from your own workflow.
+5. Run `reportkit alarm` when you need an alarm-only push without updating a Live Activity.
 
 ## Useful Commands
 
 ```bash
 reportkit status
+reportkit alarm --title "Review log watch" --in-seconds 60
 reportkit logout
 reportkit skill print --target codex
 reportkit skill print --target claude

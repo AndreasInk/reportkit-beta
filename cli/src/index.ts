@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {
+  alarmCommand,
   authCommand,
   logoutCommand,
   sendCommand,
@@ -19,6 +20,9 @@ async function main(): Promise<void> {
       return;
     case "send":
       await sendCommand([subcommand, ...rest].filter(Boolean));
+      return;
+    case "alarm":
+      await alarmCommand([subcommand, ...rest].filter(Boolean));
       return;
     case "logout":
       await logoutCommand();
@@ -40,6 +44,7 @@ Commands:
   reportkit status
   reportkit send --event start|update|end --activity-id ID --title TITLE --summary TEXT [--status good|warning|critical] [--action TEXT] [--deep-link URL]
   reportkit send --file payload.json
+  reportkit alarm --title TITLE [--in-seconds N | --fire-at ISO8601] [--apns-env sandbox|production] [--device-install-id ID]
   reportkit logout
   reportkit skill print --target codex|claude
 `);

@@ -57,3 +57,14 @@ export interface SendRequestBody {
   attributes_type?: string;
   attributes?: Record<string, unknown>;
 }
+
+export interface AlarmRequestBody {
+  title: string;
+  apns_env: ApnsEnv;
+  fire_in_seconds?: number;
+  fire_at?: string;
+  alarm_id?: string;
+  alert_title?: string;
+  alert_body?: string;
+  device_install_id?: string;
+}

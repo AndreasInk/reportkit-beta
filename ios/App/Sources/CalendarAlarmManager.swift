@@ -19,15 +19,18 @@ final class CalendarAlarmManager {
         _ = try await AlarmManager.shared.requestAuthorization()
     }
 
-    func scheduleOneShot(time: Date, title: String) async {
-        guard #available(iOS 26.0, *) else { return }
+    func scheduleOneShot(time: Date, title: String) async -> Bool {
+        guard #available(iOS 26.0, *) else {
+            print("CalendarAlarmManager: AlarmKit unavailable on this OS version")
+            return false
+        }
         let now = Date()
         let targetTime = time > now ? time : now.addingTimeInterval(1)
-        await applySchedule(.fixed(targetTime), title: title)
+        return await applySchedule(.fixed(targetTime), title: title)
     }
 
     @available(iOS 26.0, *)
-    private func applySchedule(_ schedule: Alarm.Schedule, title: String) async {
+    private func applySchedule(_ schedule: Alarm.Schedule, title: String) async -> Bool {
         let stopButton = AlarmButton(
             text: LocalizedStringResource("Dismiss"),
             textColor: .white,
@@ -48,8 +51,11 @@ final class CalendarAlarmManager {
 
         do {
             _ = try await AlarmManager.shared.schedule(id: UUID(), configuration: configuration)
+            print("CalendarAlarmManager: scheduled alarm titled '\(title)'")
+            return true
         } catch {
             print("CalendarAlarmManager: failed to schedule alarm: \(error)")
+            return false
         }
     }
 }
@@ -60,7 +66,7 @@ final class CalendarAlarmManager {
     static let shared = CalendarAlarmManager()
     private init() {}
     func requestPermissions() async throws {}
-    func scheduleOneShot(time: Date, title: String) async {}
+    func scheduleOneShot(time: Date, title: String) async -> Bool { false }
 }
 #endif
 #else
@@ -69,6 +75,6 @@ final class CalendarAlarmManager {
     static let shared = CalendarAlarmManager()
     private init() {}
     func requestPermissions() async throws {}
-    func scheduleOneShot(time: Date, title: String) async {}
+    func scheduleOneShot(time: Date, title: String) async -> Bool { false }
 }
 #endif

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import type { ApnsEnv, LiveActivityPayload, SendRequestBody, Status, VisualStyle } from "./types.js";
+import type { AlarmRequestBody, ApnsEnv, LiveActivityPayload, SendRequestBody, Status, VisualStyle } from "./types.js";
 
 export function parseArgs(argv: string[]): Map<string, string | true> {
   const output = new Map<string, string | true>();
@@ -85,6 +85,61 @@ export function buildSendBody(input: {
     body.attributes = {
       reportID: input.activityId
     };
+  }
+
+  return body;
+}
+
+export function buildAlarmBody(input: {
+  title: string;
+  apnsEnv?: ApnsEnv;
+  fireInSeconds?: number;
+  fireAt?: string;
+  alarmId?: string;
+  alertTitle?: string;
+  alertBody?: string;
+  deviceInstallId?: string;
+}): AlarmRequestBody {
+  const title = input.title.trim();
+  if (!title) {
+    throw new Error("Alarm title cannot be empty");
+  }
+
+  const body: AlarmRequestBody = {
+    title,
+    apns_env: input.apnsEnv ?? "sandbox",
+  };
+
+  if (typeof input.fireInSeconds === "number") {
+    if (!Number.isFinite(input.fireInSeconds) || input.fireInSeconds < 1) {
+      throw new Error(`Invalid fireInSeconds: ${input.fireInSeconds}`);
+    }
+    body.fire_in_seconds = Math.trunc(input.fireInSeconds);
+  }
+
+  if (input.fireAt) {
+    const fireAt = input.fireAt.trim();
+    if (!fireAt || Number.isNaN(Date.parse(fireAt))) {
+      throw new Error(`Invalid fireAt: ${input.fireAt}`);
+    }
+    body.fire_at = fireAt;
+  }
+
+  if (!body.fire_in_seconds && !body.fire_at) {
+    throw new Error("Alarm requires --in-seconds or --fire-at");
+  }
+
+  if (input.alarmId?.trim()) {
+    body.alarm_id = input.alarmId.trim();
+  }
+  if (input.alertTitle?.trim()) {
+    body.alert_title = input.alertTitle.trim();
+  }
+  if (input.alertBody?.trim()) {
+    body.alert_body = input.alertBody.trim();
+  }
+  if (input.deviceInstallId?.trim()) {
+    body.device_install_id = input.deviceInstallId.trim();
   }
 
   return body;

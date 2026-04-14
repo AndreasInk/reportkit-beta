@@ -20,12 +20,14 @@ final class ReportKitSimpleAppDelegate: NSObject, UIApplicationDelegate {
         didReceiveRemoteNotification userInfo: [AnyHashable : Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        if #available(iOS 26.0, *) {
-            RemoteAlarmHandler.handle(userInfo: userInfo)
-        } else {
-            // Fallback on earlier versions
+        Task { @MainActor in
+            if #available(iOS 26.0, *) {
+                let scheduled = await RemoteAlarmHandler.handle(userInfo: userInfo)
+                completionHandler(scheduled ? .newData : .noData)
+            } else {
+                completionHandler(.noData)
+            }
         }
-        completionHandler(.newData)
     }
 
     func application(

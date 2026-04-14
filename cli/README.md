@@ -7,6 +7,7 @@ Minimal ReportKit CLI for:
 - signing the CLI into Supabase
 - sharing the same account as the iPhone app
 - sending Live Activity updates from the terminal or external workflows
+- sending alarm-only pushes through the same authenticated backend
 
 ## Install
 
@@ -30,6 +31,7 @@ reportkit auth --email you@example.com
 reportkit status
 reportkit send --event update --activity-id daily-report --title "Revenue watch" --summary "Down 8% vs yesterday" --status warning
 reportkit send --file agent-progress.json
+reportkit alarm --title "Review log watch" --in-seconds 60
 reportkit logout
 reportkit skill print --target codex
 reportkit skill print --target claude

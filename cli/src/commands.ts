@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { cliSignIn, persistSessionSecrets, sendLiveActivity } from "./api.js";
+import { cliSignIn, persistSessionSecrets, sendAlarm, sendLiveActivity } from "./api.js";
 import { configPath, readConfig, writeConfig } from "./config.js";
-import { buildSendBody, normalizeApnsEnv, normalizeStatus, normalizeVisualStyle, optionalFlag, parseArgs, requiredFlag } from "./format.js";
+import { buildAlarmBody, buildSendBody, normalizeApnsEnv, normalizeStatus, normalizeVisualStyle, optionalFlag, parseArgs, requiredFlag } from "./format.js";
 import { promptForPassword, readPasswordFromStdin } from "./password.js";
 import { deleteSessionSecrets, loadSessionSecrets, sessionStorePath } from "./secureSessionStore.js";
 import type { LiveActivityPayload, ReportKitConfig } from "./types.js";
@@ -150,6 +150,33 @@ export async function sendCommand(argv: string[]): Promise<void> {
   console.log(JSON.stringify(response, null, 2));
 }
 
+export async function alarmCommand(argv: string[]): Promise<void> {
+  const config = readConfig();
+  requireSession(config);
+  const flags = parseArgs(argv);
+
+  const fireInSecondsRaw = optionalFlag(flags, "in-seconds");
+  const fireInSecondsParsed = fireInSecondsRaw ? Number(fireInSecondsRaw) : null;
+  if (fireInSecondsRaw && (fireInSecondsParsed === null || !Number.isFinite(fireInSecondsParsed) || fireInSecondsParsed < 1)) {
+    throw new Error(`Invalid --in-seconds: ${fireInSecondsRaw}`);
+  }
+  const fireInSeconds = fireInSecondsParsed === null ? undefined : Math.trunc(fireInSecondsParsed);
+
+  const body = buildAlarmBody({
+    title: requiredFlag(flags, "title"),
+    apnsEnv: normalizeApnsEnv(optionalFlag(flags, "apns-env")),
+    fireInSeconds,
+    fireAt: optionalFlag(flags, "fire-at"),
+    alarmId: optionalFlag(flags, "alarm-id"),
+    alertTitle: optionalFlag(flags, "alert-title"),
+    alertBody: optionalFlag(flags, "alert-body"),
+    deviceInstallId: optionalFlag(flags, "device-install-id"),
+  });
+
+  const response = await sendAlarm(config, body);
+  console.log(JSON.stringify(response, null, 2));
+}
+
 function buildSkillTemplate(target: "codex" | "claude"): string {
   const audience = target === "claude" ? "Claude Code" : "Codex";
   return `# ${audience} Skill: ReportKitSimple
@@ -189,6 +216,7 @@ Preferred CLI usage:
 - reportkit status
 - reportkit send --file payload.json
 - reportkit send --event update --activity-id ID --title TITLE --summary TEXT --status warning --visual-style progress
+- reportkit alarm --title TITLE --in-seconds 60
 
 Do not use cron here; scheduling is handled by Codex/Claude Code in this workflow.
 `;
