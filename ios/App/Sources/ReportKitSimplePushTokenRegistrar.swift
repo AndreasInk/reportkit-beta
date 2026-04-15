@@ -31,6 +31,8 @@ final class ReportKitSimplePushTokenRegistrar {
         return TokenStatusSnapshot(
             pushToStartToken: UserDefaults.standard.string(forKey: Keys.pushToken) ?? "",
             deviceToken: UserDefaults.standard.string(forKey: Keys.deviceToken) ?? "",
+            deviceInstallID: DeviceInstallStore.installID(),
+            apnsEnv: ReportKitSimpleConfig.apnsEnv,
             lastPushUploadAt: UserDefaults.standard.object(forKey: Keys.lastPushUpload) as? Date,
             lastDeviceUploadAt: UserDefaults.standard.object(forKey: Keys.lastDeviceUpload) as? Date,
             notificationsAuthorized: settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional,

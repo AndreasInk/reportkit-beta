@@ -16,3 +16,4 @@ dist/
 .codex/reportkit-hooks/
 /supabase/.temp
 /scripts/__pycache__
+ios/ReportKitSimple.xcodeproj/xcshareddata/xcschemes/ReportKitSimple.xcscheme

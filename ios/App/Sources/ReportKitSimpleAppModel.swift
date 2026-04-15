@@ -264,6 +264,8 @@ final class ReportKitSimpleAppModel: ObservableObject {
         TokenStatusSnapshot(
             pushToStartToken: "preview-push-token",
             deviceToken: "preview-device-token",
+            deviceInstallID: "preview-install-id",
+            apnsEnv: "sandbox",
             lastPushUploadAt: .now,
             lastDeviceUploadAt: .now,
             notificationsAuthorized: true,

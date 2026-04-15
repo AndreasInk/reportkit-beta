@@ -14,6 +14,10 @@ type TokenRow = {
 
 const TERMINAL_TOKEN_ERRORS = new Set(["BadDeviceToken", "Unregistered"]);
 
+function oppositeApnsEnv(env: "sandbox" | "production"): "sandbox" | "production" {
+  return env === "sandbox" ? "production" : "sandbox";
+}
+
 function asOptionalPositiveInteger(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
   const numeric = Number(value);
@@ -106,9 +110,10 @@ Deno.serve(async (req) => {
 
   let successCount = 0;
   let failureCount = 0;
+  let recoveredEnvCount = 0;
 
   for (const tokenRow of targets) {
-    const result = await sendAlarmPush({
+    let result = await sendAlarmPush({
       tokenHex: tokenRow.token_hex,
       apnsEnv,
       title,
@@ -118,6 +123,34 @@ Deno.serve(async (req) => {
       alertTitle,
       alertBody,
     });
+
+    if (!result.ok && result.reason === "BadDeviceToken") {
+      const fallbackEnv = oppositeApnsEnv(apnsEnv);
+      const fallbackResult = await sendAlarmPush({
+        tokenHex: tokenRow.token_hex,
+        apnsEnv: fallbackEnv,
+        title,
+        alarmID,
+        fireAt: fireAt ?? undefined,
+        fireInSeconds: fireInSeconds ?? undefined,
+        alertTitle,
+        alertBody,
+      });
+
+      if (fallbackResult.ok) {
+        result = fallbackResult;
+        recoveredEnvCount += 1;
+        await supabase
+          .from("reportkit_device_tokens")
+          .update({
+            apns_env: fallbackEnv,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", tokenRow.id);
+      } else {
+        result = fallbackResult;
+      }
+    }
 
     if (result.ok) {
       successCount += 1;
@@ -140,5 +173,6 @@ Deno.serve(async (req) => {
     target_count: targets.length,
     success_count: successCount,
     failure_count: failureCount,
+    recovered_env_count: recoveredEnvCount,
   });
 });

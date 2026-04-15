@@ -8,15 +8,15 @@ import { Readable } from "node:stream";
 import { buildAlarmBody, buildSendBody, normalizeVisualStyle } from "../src/format.js";
 import { resolveAuthCredentials, statusCommand } from "../src/commands.js";
 import { configPath, defaultConfig, readConfig, writeConfig } from "../src/config.js";
-import { cliSignIn } from "../src/api.js";
+import { cliSignIn, readPersistedSession, refreshSessionIfNeeded } from "../src/api.js";
 import { deleteSessionSecrets, loadSessionSecrets, sessionStorePath, writeSessionSecrets } from "../src/secureSessionStore.js";
 
-function withTemporaryConfigFile(run: () => void): void {
+async function withTemporaryConfigFile(run: () => void | Promise<void>): Promise<void> {
   const targetPath = configPath();
   const original = fs.existsSync(targetPath) ? fs.readFileSync(targetPath, "utf8") : null;
 
   try {
-    run();
+    await run();
   } finally {
     if (original === null) {
       fs.rmSync(targetPath, { force: true });
@@ -26,7 +26,7 @@ function withTemporaryConfigFile(run: () => void): void {
   }
 }
 
-function withTemporarySessionStore(run: () => void): void {
+async function withTemporarySessionStore(run: () => void | Promise<void>): Promise<void> {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "reportkit-session-"));
   const originalStoreFile = process.env.REPORTKIT_SESSION_STORE_FILE;
   const originalKeychainMock = process.env.REPORTKIT_SESSION_KEYCHAIN_MOCK_FILE;
@@ -35,7 +35,7 @@ function withTemporarySessionStore(run: () => void): void {
   process.env.REPORTKIT_SESSION_KEYCHAIN_MOCK_FILE = path.join(tempRoot, "session-keychain.json");
 
   try {
-    run();
+    await run();
   } finally {
     if (originalStoreFile === undefined) {
       delete process.env.REPORTKIT_SESSION_STORE_FILE;
@@ -134,9 +134,9 @@ test("buildAlarmBody supports fire_at payloads", () => {
   });
 });
 
-test("statusCommand labels expiry as cached local session metadata", () => {
-  withTemporarySessionStore(() => {
-    withTemporaryConfigFile(() => {
+test("statusCommand labels expiry as cached local session metadata", async () => {
+  await withTemporarySessionStore(async () => {
+    await withTemporaryConfigFile(async () => {
       writeSessionSecrets({
         accessToken: "access",
         refreshToken: "refresh",
@@ -158,7 +158,7 @@ test("statusCommand labels expiry as cached local session metadata", () => {
       };
 
       try {
-        statusCommand();
+        await statusCommand();
       } finally {
         console.log = originalLog;
       }
@@ -171,9 +171,9 @@ test("statusCommand labels expiry as cached local session metadata", () => {
   });
 });
 
-test("statusCommand flags expired cached sessions", () => {
-  withTemporarySessionStore(() => {
-    withTemporaryConfigFile(() => {
+test("statusCommand flags expired cached sessions", async () => {
+  await withTemporarySessionStore(async () => {
+    await withTemporaryConfigFile(async () => {
       writeSessionSecrets({
         accessToken: "access",
         refreshToken: "refresh",
@@ -195,13 +195,125 @@ test("statusCommand flags expired cached sessions", () => {
       };
 
       try {
-        statusCommand();
+        await statusCommand();
       } finally {
         console.log = originalLog;
       }
 
       assert.match(lines.join("\n"), /Cached session expired at: 2000-01-01T00:00:00.000Z/);
       assert.match(lines.join("\n"), /next authenticated request will try to refresh it/);
+    });
+  });
+});
+
+test("refreshSessionIfNeeded auto refreshes expired sessions from the secure store", async () => {
+  await withTemporarySessionStore(async () => {
+    await withTemporaryConfigFile(async () => {
+      writeSessionSecrets({
+        accessToken: "stale-access",
+        refreshToken: "stored-refresh",
+      });
+      const config = {
+        supabaseUrl: "https://project-ref.supabase.co",
+        supabaseAnonKey: "sb_publishable_dummy_key",
+        session: {
+          userID: "user-123",
+          email: "user@example.com",
+          expiresAt: "2000-01-01T00:00:00.000Z"
+        }
+      } satisfies ReturnType<typeof readConfig>;
+      writeConfig(config);
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async (input, init) => {
+        assert.match(String(input), /\/auth\/v1\/token\?grant_type=refresh_token$/);
+        const body = JSON.parse(String(init?.body ?? "{}")) as { refresh_token?: string };
+        assert.equal(body.refresh_token, "stored-refresh");
+        return new Response(JSON.stringify({
+          access_token: "fresh-access",
+          refresh_token: "fresh-refresh",
+          expires_in: 3600,
+          token_type: "bearer",
+          user: {
+            id: "user-123",
+            email: "user@example.com",
+          }
+        }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        });
+      }) as typeof fetch;
+
+      try {
+        const loadedConfig = readConfig();
+        const refreshed = await refreshSessionIfNeeded(loadedConfig, readPersistedSession(loadedConfig));
+        const persistedSecrets = loadSessionSecrets();
+
+        assert.equal(refreshed.accessToken, "fresh-access");
+        assert.equal(refreshed.refreshToken, "fresh-refresh");
+        assert.notEqual(refreshed.expiresAt, "2000-01-01T00:00:00.000Z");
+        assert.equal(loadedConfig.session?.expiresAt, refreshed.expiresAt);
+        assert.deepEqual(persistedSecrets, {
+          accessToken: "fresh-access",
+          refreshToken: "fresh-refresh",
+        });
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
+});
+
+test("statusCommand auto refreshes expired session metadata when refresh succeeds", async () => {
+  await withTemporarySessionStore(async () => {
+    await withTemporaryConfigFile(async () => {
+      writeSessionSecrets({
+        accessToken: "stale-access",
+        refreshToken: "stored-refresh",
+      });
+      writeConfig({
+        supabaseUrl: "https://project-ref.supabase.co",
+        supabaseAnonKey: "sb_publishable_dummy_key",
+        session: {
+          userID: "user-123",
+          email: "user@example.com",
+          expiresAt: "2000-01-01T00:00:00.000Z"
+        }
+      });
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async () => {
+        return new Response(JSON.stringify({
+          access_token: "fresh-access",
+          refresh_token: "fresh-refresh",
+          expires_in: 3600,
+          token_type: "bearer",
+          user: {
+            id: "user-123",
+            email: "user@example.com",
+          }
+        }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        });
+      }) as typeof fetch;
+
+      const lines: string[] = [];
+      const originalLog = console.log;
+      console.log = (message?: unknown) => {
+        lines.push(String(message ?? ""));
+      };
+
+      try {
+        await statusCommand();
+      } finally {
+        console.log = originalLog;
+        globalThis.fetch = originalFetch;
+      }
+
+      assert.doesNotMatch(lines.join("\n"), /Cached session expired at:/);
+      assert.match(lines.join("\n"), /Cached session expires at:/);
+      assert.match(lines.join("\n"), /Session metadata was auto-refreshed from the secure session store\./);
     });
   });
 });
@@ -363,7 +475,7 @@ test("readConfig ignores stored Supabase values and keeps stored session metadat
 });
 
 test("readConfig migrates legacy plaintext session secrets into the secure store", () => {
-  withTemporarySessionStore(() => {
+  return withTemporarySessionStore(() => {
     const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "reportkit-home-"));
     const runtimeDir = path.join(tempHome, ".reportkit");
     const localConfigDir = path.join(tempHome, ".config", "reportkit-simple");
@@ -435,7 +547,7 @@ test("readConfig migrates legacy plaintext session secrets into the secure store
 });
 
 test("secure session store writes canonical file with local-only permissions", () => {
-  withTemporarySessionStore(() => {
+  return withTemporarySessionStore(() => {
     writeSessionSecrets({
       accessToken: "access",
       refreshToken: "refresh",

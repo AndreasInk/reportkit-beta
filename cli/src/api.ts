@@ -14,6 +14,8 @@ interface RequestOptions {
   session?: CliSession | null;
 }
 
+const SESSION_REFRESH_WINDOW_MS = 5 * 60 * 1000;
+
 function describeNetworkError(error: unknown): string {
   if (!(error instanceof Error)) {
     return String(error);
@@ -63,6 +65,10 @@ async function requestJSON<T>(
   functionName: string,
   options: RequestOptions = {}
 ): Promise<T> {
+  if (options.session) {
+    options.session = await refreshSessionIfNeeded(config, options.session);
+  }
+
   const withToken = async (token: string): Promise<T> => {
     return fetchJSON<T>(urlFor(functionName, config.supabaseUrl), {
       method: options.method ?? "POST",
@@ -137,6 +143,25 @@ function urlFor(functionName: string, supabaseUrl: string): string {
 
 async function refreshSession(config: ReportKitConfig): Promise<CliLoginResponse> {
   const session = persistedSession(config);
+  return refreshSessionWithToken(config, session.refreshToken);
+}
+
+function isSessionExpiringSoon(expiresAt: string, now: number = Date.now()): boolean {
+  const expiry = new Date(expiresAt).getTime();
+  if (Number.isNaN(expiry)) {
+    return true;
+  }
+
+  return expiry <= now + SESSION_REFRESH_WINDOW_MS;
+}
+
+async function refreshSessionWithToken(
+  config: ReportKitConfig,
+  refreshToken: string,
+): Promise<CliLoginResponse> {
+  if (!refreshToken) {
+    throw new Error("Session expired. Run reportkit auth again.");
+  }
 
   const url = new URL("/auth/v1/token", config.supabaseUrl);
   url.searchParams.set("grant_type", "refresh_token");
@@ -148,9 +173,29 @@ async function refreshSession(config: ReportKitConfig): Promise<CliLoginResponse
       apikey: config.supabaseAnonKey
     },
     body: JSON.stringify({
-      refresh_token: session.refreshToken
+      refresh_token: refreshToken
     })
   }, "auth refresh");
+}
+
+export async function refreshSessionIfNeeded(
+  config: ReportKitConfig,
+  session: CliSession,
+  options: { force?: boolean } = {},
+): Promise<CliSession> {
+  if (!options.force && !isSessionExpiringSoon(session.expiresAt)) {
+    return session;
+  }
+
+  const refreshed = await refreshSessionWithToken(config, session.refreshToken);
+  const nextSession: CliSession = {
+    ...session,
+    accessToken: refreshed.access_token,
+    refreshToken: refreshed.refresh_token,
+    expiresAt: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+  };
+  writePersistedSession(config, nextSession);
+  return nextSession;
 }
 
 export function cliSignIn(
@@ -196,4 +241,8 @@ export function sendAlarm(
 
 export function persistSessionSecrets(secrets: { accessToken: string; refreshToken: string }): void {
   writeSessionSecrets(secrets);
+}
+
+export function readPersistedSession(config: ReportKitConfig): CliSession {
+  return persistedSession(config);
 }

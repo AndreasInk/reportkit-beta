@@ -29,6 +29,8 @@ enum ReportKitSimplePhase: Equatable {
 struct TokenStatusSnapshot: Equatable {
     var pushToStartToken: String
     var deviceToken: String
+    var deviceInstallID: String
+    var apnsEnv: String
     var lastPushUploadAt: Date?
     var lastDeviceUploadAt: Date?
     var notificationsAuthorized: Bool
@@ -40,6 +42,8 @@ struct TokenStatusSnapshot: Equatable {
     static let empty = TokenStatusSnapshot(
         pushToStartToken: "",
         deviceToken: "",
+        deviceInstallID: "",
+        apnsEnv: "",
         lastPushUploadAt: nil,
         lastDeviceUploadAt: nil,
         notificationsAuthorized: false,

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { cliSignIn, persistSessionSecrets, sendAlarm, sendLiveActivity } from "./api.js";
+import { cliSignIn, persistSessionSecrets, readPersistedSession, refreshSessionIfNeeded, sendAlarm, sendLiveActivity } from "./api.js";
 import { configPath, readConfig, writeConfig } from "./config.js";
 import { buildAlarmBody, buildSendBody, normalizeApnsEnv, normalizeStatus, normalizeVisualStyle, optionalFlag, parseArgs, requiredFlag } from "./format.js";
 import { promptForPassword, readPasswordFromStdin } from "./password.js";
@@ -81,17 +81,32 @@ export async function authCommand(argv: string[]): Promise<void> {
   console.log(`Signed in as ${config.session.email}.`);
 }
 
-export function statusCommand(): void {
+export async function statusCommand(): Promise<void> {
   const config = readConfig();
   if (!config.session) {
     console.log("Not signed in. Run `reportkit auth --email ...`.");
     return;
   }
 
+  let refreshed = false;
+  try {
+    const session = readPersistedSession(config);
+    const previousExpiry = session.expiresAt;
+    const nextSession = await refreshSessionIfNeeded(config, session);
+    if (nextSession.expiresAt !== previousExpiry) {
+      refreshed = true;
+    }
+  } catch {
+    // Keep status usable offline and fall back to cached metadata below.
+  }
+
   console.log(`Signed in as: ${config.session.email}`);
   console.log(`User ID: ${config.session.userID}`);
   for (const line of describeSessionExpiry(config.session.expiresAt)) {
     console.log(line);
+  }
+  if (refreshed) {
+    console.log("Session metadata was auto-refreshed from the secure session store.");
   }
   console.log(`Config: ${configPath()}`);
   console.log(`Secure session store: ${sessionStorePath()}`);

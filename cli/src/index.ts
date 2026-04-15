@@ -16,7 +16,7 @@ async function main(): Promise<void> {
       await authCommand([subcommand, ...rest].filter(Boolean));
       return;
     case "status":
-      statusCommand();
+      await statusCommand();
       return;
     case "send":
       await sendCommand([subcommand, ...rest].filter(Boolean));

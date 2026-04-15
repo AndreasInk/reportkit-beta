@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ReportKitSimpleRootView: View {
     @EnvironmentObject private var model: ReportKitSimpleAppModel
@@ -200,6 +203,8 @@ private struct SignedInScreen: View {
                 rows: [
                     ("Push-to-start", model.tokenStatus.pushToStartToken.isEmpty ? "Waiting" : "Ready"),
                     ("Device token", model.tokenStatus.deviceToken.isEmpty ? "Waiting" : "Ready"),
+                    ("Install ID", model.tokenStatus.deviceInstallID.isEmpty ? "Unknown" : model.tokenStatus.deviceInstallID),
+                    ("APNs env", model.tokenStatus.apnsEnv.isEmpty ? "Unknown" : model.tokenStatus.apnsEnv),
                     ("Notifications", model.tokenStatus.notificationsAuthorized ? "Allowed" : "Not granted"),
                     ("Alarm scheduling", model.tokenStatus.alarmsEnabled ? "Enabled" : "Not enabled"),
                     ("Push upload", model.tokenStatus.lastPushUploadAt?.formatted(date: .omitted, time: .shortened) ?? "Pending"),
@@ -218,6 +223,12 @@ private struct SignedInScreen: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(model.isWorking)
+
+                Button("Copy Install ID") {
+                    copyInstallID(model.tokenStatus.deviceInstallID)
+                }
+                .buttonStyle(.bordered)
+                .disabled(model.tokenStatus.deviceInstallID.isEmpty)
 
                 Button("Refresh Status") {
                     Task { await model.refresh() }
@@ -256,6 +267,14 @@ private struct SignedInScreen: View {
         .padding(16)
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private func copyInstallID(_ installID: String) {
+        guard !installID.isEmpty else { return }
+        #if canImport(UIKit)
+        UIPasteboard.general.string = installID
+        #endif
+        model.infoMessage = "Install ID copied."
     }
 }
 
@@ -349,6 +368,8 @@ private struct RootPreviewContainer: View {
         tokenStatus: TokenStatusSnapshot(
             pushToStartToken: "abc",
             deviceToken: "def",
+            deviceInstallID: "preview-install-id",
+            apnsEnv: "sandbox",
             lastPushUploadAt: .now,
             lastDeviceUploadAt: .now,
             notificationsAuthorized: true,
